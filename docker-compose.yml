@@ -21,18 +21,9 @@ services:
       - db
     ports:
       - "5411:5411"
-    # Σύνδεση στο δίκτυο που χρησιμοποιεί ήδη ο Caddy για τα άλλα sites
-    networks:
-      - default
-      - saekreth_net
     environment:
       DB_HOST: db
       DB_NAME: saek_attendance
       DB_USER: saek_admin
       DB_PASS: my_very_strong_user_password # Να αλλαχθεί οπωσδήποτε
       TZ: Europe/Athens
-
-# Δήλωση του εξωτερικού δικτύου
-networks:
-  saekreth_net:
-    external: true
