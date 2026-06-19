@@ -84,39 +84,48 @@ def require_role(*allowed_roles):
     return role_checker
 
 # -------------------- DOMAINS FROM ENV --------------------
-FRONTEND_DOMAIN = os.getenv("FRONTEND_DOMAIN", "localhost")
-ADMIN_DOMAIN = os.getenv("ADMIN_DOMAIN", "localhost")
+FRONTEND_DOMAIN = os.getenv("FRONTEND_DOMAIN", "").lower().strip()
+ADMIN_DOMAIN = os.getenv("ADMIN_DOMAIN", "").lower().strip()
+
+# Έλεγχος αν τρέχουμε σε localhost (development mode)
+def is_localhost(host: str) -> bool:
+    return host in ("localhost", "127.0.0.1", "::1") or host.startswith("localhost:")
 
 # ---------- Helper για host check (επιστρέφει 404) ----------
 def require_grammateia_host(request: Request):
     host = request.headers.get("host", "").lower()
-    # Αν ο ADMIN_DOMAIN είναι "localhost", επιτρέπουμε οποιοδήποτε host (για ανάπτυξη)
-    if ADMIN_DOMAIN != "localhost" and ADMIN_DOMAIN not in host:
+    # Αν είναι localhost, επιτρέπεται πάντα
+    if is_localhost(host):
+        return
+    # Αλλιώς, έλεγχος για admin domain
+    if ADMIN_DOMAIN and ADMIN_DOMAIN not in host:
         raise HTTPException(status_code=404, detail="Not found")
 
 # ---------- Middleware προστασίας docs ----------
 @app.middleware("http")
 async def protect_docs(request: Request, call_next):
     if request.url.path in ("/docs", "/redoc", "/openapi.json") or request.url.path.startswith(("/docs/", "/redoc/")):
-        # Έλεγχος host (μόνο αν ADMIN_DOMAIN != "localhost")
         host = request.headers.get("host", "").lower()
-        if ADMIN_DOMAIN != "localhost" and ADMIN_DOMAIN not in host:
-            return JSONResponse(status_code=404, content={"detail": "Not found"})
-        # Έλεγχος admin session
-        token = request.cookies.get("session_token")
-        if not token:
-            return JSONResponse(status_code=403, content={"detail": "Forbidden"})
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT user_role FROM sessions WHERE token = %s AND expires_at > NOW()", (token,))
-            session = cursor.fetchone()
-            cursor.close()
-            conn.close()
-            if not session or session["user_role"] != "admin":
+        # Σε localhost επιτρέπεται πάντα
+        if not is_localhost(host):
+            # Έλεγχος admin domain (αν ορίστηκε)
+            if ADMIN_DOMAIN and ADMIN_DOMAIN not in host:
+                return JSONResponse(status_code=404, content={"detail": "Not found"})
+            # Έλεγχος admin session
+            token = request.cookies.get("session_token")
+            if not token:
                 return JSONResponse(status_code=403, content={"detail": "Forbidden"})
-        except Exception:
-            return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("SELECT user_role FROM sessions WHERE token = %s AND expires_at > NOW()", (token,))
+                session = cursor.fetchone()
+                cursor.close()
+                conn.close()
+                if not session or session["user_role"] != "admin":
+                    return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+            except Exception:
+                return JSONResponse(status_code=403, content={"detail": "Forbidden"})
     return await call_next(request)
 
 # CORS - δυναμικά origins
@@ -137,7 +146,15 @@ app.add_middleware(
     allow_headers=["Content-Type"],
 )
 
-# Static files (HTML pages)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Content-Type"],
+)
+
+# ---------- Static files (HTML pages) ----------
 @app.get("/teacher.html")
 async def teacher_page(request: Request):
     token = request.cookies.get("session_token")
@@ -163,18 +180,23 @@ async def login_page():
 
 @app.get("/admin-login.html")
 async def admin_login_page(request: Request):
-    # Το admin-login επιτρέπεται μόνο από admin domain (ή localhost)
     host = request.headers.get("host", "").lower()
-    if ADMIN_DOMAIN != "localhost" and ADMIN_DOMAIN not in host:
-        raise HTTPException(status_code=404, detail="Not found")
-    return FileResponse("admin-login.html")
+    # Σε localhost επιτρέπεται πάντα
+    if is_localhost(host):
+        return FileResponse("admin-login.html")
+    # Αλλιώς, μόνο από admin domain
+    if ADMIN_DOMAIN and ADMIN_DOMAIN in host:
+        return FileResponse("admin-login.html")
+    raise HTTPException(status_code=404, detail="Not found")
 
 @app.get("/admin-dashboard.html")
 async def admin_dashboard_page(request: Request, current_user = Depends(require_role("admin"))):
     host = request.headers.get("host", "").lower()
-    if ADMIN_DOMAIN != "localhost" and ADMIN_DOMAIN not in host:
-        raise HTTPException(status_code=404, detail="Not found")
-    return FileResponse("admin-dashboard.html")
+    if is_localhost(host):
+        return FileResponse("admin-dashboard.html")
+    if ADMIN_DOMAIN and ADMIN_DOMAIN in host:
+        return FileResponse("admin-dashboard.html")
+    raise HTTPException(status_code=404, detail="Not found")
 
 @app.get("/print.html")
 async def print_page(request: Request, current_user = Depends(require_role("admin"))):
@@ -184,12 +206,32 @@ async def print_page(request: Request, current_user = Depends(require_role("admi
 async def root(request: Request):
     host = request.headers.get("host", "").lower()
     
+    # Αν είναι localhost, πάμε στο login (ή σε ό,τι θέλουμε)
+    if is_localhost(host):
+        # Ελέγχουμε session για να δούμε αν είναι admin ή instructor
+        token = request.cookies.get("session_token")
+        if token:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT user_role FROM sessions WHERE token = %s AND expires_at > NOW()", (token,))
+            session = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            if session:
+                if session["user_role"] == "instructor":
+                    return FileResponse("teacher.html")
+                elif session["user_role"] == "student":
+                    return FileResponse("student.html")
+                elif session["user_role"] == "admin":
+                    return FileResponse("admin-dashboard.html")
+        return FileResponse("login.html")
+    
     # Admin dashboard για ADMIN_DOMAIN
-    if ADMIN_DOMAIN != "localhost" and ADMIN_DOMAIN in host:
+    if ADMIN_DOMAIN and ADMIN_DOMAIN in host:
         return FileResponse("admin-dashboard.html")
     
     # Frontend για FRONTEND_DOMAIN
-    if FRONTEND_DOMAIN != "localhost" and FRONTEND_DOMAIN in host:
+    if FRONTEND_DOMAIN and FRONTEND_DOMAIN in host:
         token = request.cookies.get("session_token")
         if token:
             conn = get_db_connection()
@@ -207,7 +249,7 @@ async def root(request: Request):
                     return FileResponse("login.html")
         return FileResponse("login.html")
     
-    # Για localhost ή άλλους hosts – προσαρμοσμένο
+    # Default (π.χ. αν δεν ταιριάζει με κανένα domain)
     return {"status": "Online", "port": 5411, "database": "Connected" if connection_pool else "Disconnected"}
 
 # -------------------- DB CONNECTION --------------------

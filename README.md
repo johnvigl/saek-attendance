@@ -61,13 +61,13 @@ ADMIN_DOMAIN=grammateia.saek_example.gr
 
 ## Εισαγωγή δεδομένων (CSV)
 
-Ως admin, μπορείτε να εισάγετε:
+Ως admin, μπορείτε να εισάγετε: `http://localhost:5411/docs`
 
-    Εκπαιδευτές: `surname, name, mail, phone`
+- Εκπαιδευτές: `surname, name, mail, phone`
 
-    Μαθήματα: `specialty_name, semester, department, team, lesson_name, type_indicator, classroom, weekly_hours, surname, name`
+- Μαθήματα: `specialty_name, semester, department, team, lesson_name, type_indicator, classroom, weekly_hours, surname, name`
 
-    Φοιτητές: `amk, surname, name, father_name, mother_name, mail, phone, specialty_name, semester, department, team`
+- Φοιτητές: `amk, surname, name, father_name, mother_name, mail, phone, specialty_name, semester, department, team`
 
 Τα CSV αρχεία πρέπει να είναι σε UTF-8 με κόμμα (,) ως διαχωριστικό.
 
@@ -91,7 +91,7 @@ saek-attendance/
 ## Συχνά προβλήματα
 
 - "Database not available"
-    Βεβαιωθείτε ότι το container saek_db τρέχει (docker ps).
+    Βεβαιωθείτε ότι το container saek_db τρέχει, εκτελέστε `docker ps`
     Ελέγξτε τα credentials στο .env.
 
 - "No active semester configured"
@@ -109,5 +109,3 @@ saek-attendance/
 ## Συνεισφορά
 
 Αν θέλετε να βελτιώσετε το σύστημα, κάντε fork, εφαρμόστε αλλαγές και αποστείλετε pull request.
-
-ΣΑΕΚ - Σύστημα Απουσιολογίου & Βιβλίου Ύλης
