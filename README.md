@@ -20,8 +20,8 @@
 ## Εγκατάσταση
 
 1. Κατεβάστε τον κώδικα
-git clone https://github.com/johnvigl/saek-attendance.git
-cd saek-attendance
+`git clone https://github.com/johnvigl/saek-attendance.git`
+`cd saek-attendance`
 
 2. Δημιουργήστε το αρχείο .env
 cp .env.example .env
@@ -29,11 +29,13 @@ cp .env.example .env
   ### α. αλλάξτε τα credentials (χρησιμοποιήστε ισχυρά passwords)
   ### β. ορίστε τα domains (για παράδειγμα):
             Yποστηρίζονται 2 ξεχωριστά subdomains για τη διαχείριση και τους εκπαιδευτές/καταρτιζόμενους.
+            ```python
             FRONTEND_DOMAIN=apousies.saek_example.gr
             ADMIN_DOMAIN=grammateia.saek_example.gr
+            ```
 
 3. Εκκίνηση
-docker-compose up -d
+`docker-compose up -d`
 
 4. Πρόσβαση
     Εκπαιδευτές/Φοιτητές: http://localhost:5411
@@ -54,16 +56,17 @@ docker-compose up -d
 
 Ως admin, μπορείτε να εισάγετε:
 
-    Εκπαιδευτές: surname, name, mail, phone
+    Εκπαιδευτές: `surname, name, mail, phone`
 
-    Μαθήματα: specialty_name, semester, department, team, lesson_name, type_indicator, classroom, weekly_hours, surname, name
+    Μαθήματα: `specialty_name, semester, department, team, lesson_name, type_indicator, classroom, weekly_hours, surname, name`
 
-    Φοιτητές: amk, surname, name, father_name, mother_name, mail, phone, specialty_name, semester, department, team
+    Φοιτητές: `amk, surname, name, father_name, mother_name, mail, phone, specialty_name, semester, department, team`
 
 Τα CSV αρχεία πρέπει να είναι σε UTF-8 με κόμμα (,) ως διαχωριστικό.
 
 ## Δομή φακέλων
 
+```plaintext
 saek-attendance/
 ├── app/
 │   ├── static/           # στατικά αρχεία (logo, css, js)
@@ -76,7 +79,7 @@ saek-attendance/
 ├── .env                  # πραγματικές μεταβλητές (δημιουργείται από τον χρήστη)
 ├── README.md
 └── LICENSE               # GNU GPL v3
-
+```
 ## Συχνά προβλήματα
 
 - "Database not available"
