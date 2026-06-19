@@ -20,7 +20,7 @@
 ## Εγκατάσταση
 
 1. Κατεβάστε τον κώδικα
-git clone https://github.com/yourusername/saek-attendance.git
+git clone https://github.com/johnvigl/saek-attendance.git
 cd saek-attendance
 
 2. Δημιουργήστε το αρχείο .env
