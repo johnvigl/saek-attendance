@@ -1,0 +1,38 @@
+services:
+  db:
+    image: mariadb:latest
+    container_name: saek_db
+    restart: always
+    ports:
+      - "127.0.0.1:3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: my_very_strong_root_password # Να αλλαχθεί οπωσδήποτε
+      MYSQL_DATABASE: saek_attendance
+      MYSQL_USER: saek_admin
+      MYSQL_PASSWORD: my_very_strong_user_password # Να αλλαχθεί οπωσδήποτε
+    volumes:
+      - ./db_data:/var/lib/mysql
+
+  app:
+    build: ./app
+    container_name: saek_app
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "5411:5411"
+    # Σύνδεση στο δίκτυο που χρησιμοποιεί ήδη ο Caddy για τα άλλα sites
+    networks:
+      - default
+      - saekreth_net
+    environment:
+      DB_HOST: db
+      DB_NAME: saek_attendance
+      DB_USER: saek_admin
+      DB_PASS: my_very_strong_user_password # Να αλλαχθεί οπωσδήποτε
+      TZ: Europe/Athens
+
+# Δήλωση του εξωτερικού δικτύου
+networks:
+  saekreth_net:
+    external: true

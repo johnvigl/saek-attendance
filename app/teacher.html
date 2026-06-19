@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Απουσιολόγιο ΣΑΕΚ</title>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto; }
+        body { background: #f1f5f9; margin: 0; padding: 16px; }
+        .container { max-width: 750px; margin: 0 auto; }
+        .card { background: white; border-radius: 28px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .teacher-name { font-size: 1.6rem; font-weight: 600; color: #0f172a; margin: 0 0 0.5rem 0; }
+        label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 1rem; }
+        select, textarea { width: 100%; padding: 14px; font-size: 1rem; border: 1px solid #cbd5e1; border-radius: 20px; margin-bottom: 20px; background: white; }
+        textarea { font-family: inherit; }
+        button { background-color: #2563eb; color: white; font-weight: bold; border: none; cursor: pointer; border-radius: 40px; padding: 12px 20px; font-size: 1rem; transition: 0.2s; }
+        button:active { background-color: #1d4ed8; transform: scale(0.98); }
+        .btn-danger { background-color: #dc2626; }
+        .btn-danger:active { background-color: #b91c1c; }
+
+        .student-row { background: #f8fafc; border-radius: 24px; padding: 12px 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .student-info { flex: 2; min-width: 140px; }
+        .student-name { font-weight: 600; font-size: 1.1rem; }
+        .student-amk { font-size: 0.8rem; color: #475569; margin-right: 8px; display: inline-block; }
+
+        .hours-stepper { display: flex; align-items: center; gap: 10px; background: white; border-radius: 48px; border: 1px solid #cbd5e1; padding: 4px; }
+        .hours-stepper button { width: 44px; height: 44px; background: #e2e8f0; color: #0f172a; font-size: 1.8rem; font-weight: bold; border-radius: 40px; margin: 0; padding: 0; display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+        .hours-stepper button:active { background: #cbd5e1; }
+        .hours-value { font-size: 1.5rem; font-weight: 600; min-width: 50px; text-align: center; }
+
+        .total-stepper { display: flex; align-items: center; gap: 15px; background: #f1f5f9; border-radius: 60px; padding: 8px 12px; width: fit-content; margin: 0 auto 20px auto; }
+        .total-stepper button { width: 52px; height: 52px; background: #e2e8f0; color: #0f172a; font-size: 2.2rem; font-weight: bold; border-radius: 50%; margin: 0; display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+        .total-stepper .hours-value { font-size: 2rem; min-width: 70px; }
+
+        /* Κουμπιά δίπλα-δίπλα, κεντραρισμένα */
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 16px 0 20px 0;
+            flex-wrap: wrap;
+        }
+        .button-group button {
+            flex: 1 1 auto;
+            min-width: 140px;
+            max-width: 220px;
+        }
+
+        /* Πίνακες ύλης */
+        .syllabus-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 4px; }
+        .syllabus-table td { padding: 4px 8px; border-bottom: 1px solid #eef2f6; vertical-align: top; }
+        .syllabus-table tr:last-child td { border-bottom: none; }
+        .syllabus-date { white-space: nowrap; font-weight: 500; color: #1e293b; padding-right: 16px; }
+        .syllabus-content { word-break: break-word; }
+        .syllabus-empty { color: #64748b; font-style: italic; padding: 6px 0; }
+
+        /* Ενότητα άλλων μαθημάτων – μόνο κείμενο ύλης */
+        .other-syllabus-list { list-style: none; padding: 0; margin: 6px 0 0 0; }
+        .other-syllabus-list li { padding: 6px 0; border-bottom: 1px solid #eef2f6; color: #1e293b; }
+        .other-syllabus-list li:last-child { border-bottom: none; }
+
+        .section-title { font-size: 1.2rem; font-weight: 600; margin: 20px 0 12px 0; color: #0f172a; }
+        #deptCourseSelect { margin-bottom: 12px; }
+
+        .error { background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 24px; margin-top: 16px; text-align: center; display: none; }
+        .inline-label { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .inline-label label { margin-bottom: 0; }
+
+        /* Διαχωριστικά */
+        .section-divider { margin: 24px 0 16px 0; border-top: 2px solid #e2e8f0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <!-- Ονοματεπώνυμο εκπαιδευτή -->
+        <div id="teacherNameHeader" class="teacher-name"></div>
+
+        <!-- 1. Επιλογή μαθήματος -->
+        <div id="coursesSection">
+            <label>📖 Μάθημα</label>
+            <select id="courseSelect">
+                <option value="">-- Φόρτωση μαθημάτων... --</option>
+            </select>
+        </div>
+
+        <div id="studentsSection" style="display: none;">
+            <!-- 2. Ώρες διδασκαλίας -->
+            <div class="inline-label" style="justify-content: center;">
+                <label>⏱ Ώρες διδασκαλίας (σήμερα)</label>
+            </div>
+            <div class="total-stepper" id="totalHoursStepper">
+                <button id="decrTotal">−</button>
+                <span class="hours-value" id="totalHoursValue">0</span>
+                <button id="incrTotal">+</button>
+            </div>
+
+            <!-- 3. Λίστα σπουδαστών -->
+            <div id="studentsList"></div>
+
+            <!-- 4. Πεδίο σημερινής ύλης -->
+            <label>📝 Διδαχθείσα ύλη / σημειώσεις</label>
+            <textarea id="syllabus" rows="2" placeholder="π.χ. Κεφάλαιο 3, ασκήσεις..."></textarea>
+
+            <!-- 5. Κουμπιά υποβολής & διαγραφής (δίπλα-δίπλα) -->
+            <div class="button-group">
+                <button id="submitAttendanceBtn">✅ Υποβολή</button>
+                <button id="deleteTodayBtn" class="btn-danger">🗑 Διαγραφή</button>
+            </div>
+
+            <!-- 6. Προηγούμενη ύλη του τρέχοντος μαθήματος (ημερομηνία + ύλη) -->
+            <div class="section-divider"></div>
+            <div style="font-weight:600; margin-bottom:4px;">📚 Προηγούμενη ύλη</div>
+            <div id="previousSyllabusContent"></div>
+
+            <!-- 7. Ύλη άλλων μαθημάτων του τμήματος (μόνο κείμενο) -->
+            <div class="section-divider"></div>
+            <div class="section-title">📚 Ύλη άλλων μαθημάτων τμήματος</div>
+            <select id="deptCourseSelect">
+                <option value="">-- Επιλέξτε μάθημα --</option>
+            </select>
+            <div id="deptSyllabusContent"></div>
+        </div>
+
+        <div id="errorMsg" class="error"></div>
+    </div>
+</div>
+
+<script>
+    let currentTeacherId = null;
+    let currentCourseUnitId = null;
+    let currentStudents = [];
+    let coursesList = [];
+    let totalHours = 0;
+
+    let teacherSurname = '';
+    let teacherName = '';
+    let allCourseUnits = [];
+
+    const courseSelect = document.getElementById('courseSelect');
+    const studentsSection = document.getElementById('studentsSection');
+    const studentsListDiv = document.getElementById('studentsList');
+    const syllabusTextarea = document.getElementById('syllabus');
+    const submitBtn = document.getElementById('submitAttendanceBtn');
+    const errorDiv = document.getElementById('errorMsg');
+    const totalHoursSpan = document.getElementById('totalHoursValue');
+    const decrTotalBtn = document.getElementById('decrTotal');
+    const incrTotalBtn = document.getElementById('incrTotal');
+    const teacherNameHeader = document.getElementById('teacherNameHeader');
+    const deptCourseSelect = document.getElementById('deptCourseSelect');
+    const deptSyllabusContent = document.getElementById('deptSyllabusContent');
+    const previousSyllabusContent = document.getElementById('previousSyllabusContent');
+
+    function showError(msg) {
+        errorDiv.innerText = msg;
+        errorDiv.style.display = 'block';
+        setTimeout(() => errorDiv.style.display = 'none', 5000);
+    }
+
+    async function apiRequest(url, options = {}) {
+        const res = await fetch(url, { ...options, credentials: 'include', headers: { 'Content-Type': 'application/json' } });
+        if (!res.ok) {
+            let errMsg = `HTTP ${res.status}`;
+            try { const data = await res.json(); errMsg = data.detail || errMsg; } catch(e) {}
+            throw new Error(errMsg);
+        }
+        return res.json();
+    }
+
+    function updateTotalHoursUI() {
+        totalHoursSpan.innerText = totalHours;
+        document.querySelectorAll('.student-stepper').forEach(stepper => {
+            const valueSpan = stepper.querySelector('.hours-value');
+            let currentVal = parseInt(valueSpan.innerText) || 0;
+            if (currentVal > totalHours) {
+                currentVal = totalHours;
+                valueSpan.innerText = currentVal;
+            }
+            const decBtn = stepper.querySelector('.decr');
+            const incBtn = stepper.querySelector('.incr');
+            if (totalHours === 0) {
+                decBtn.disabled = true;
+                incBtn.disabled = true;
+                valueSpan.innerText = '0';
+            } else {
+                decBtn.disabled = (currentVal <= 0);
+                incBtn.disabled = (currentVal >= totalHours);
+            }
+        });
+    }
+
+    function changeTotal(delta) {
+        let newVal = totalHours + delta;
+        if (newVal < 0) newVal = 0;
+        if (newVal > 8) newVal = 8;
+        if (newVal !== totalHours) {
+            totalHours = newVal;
+            updateTotalHoursUI();
+        }
+    }
+
+    function createStudentStepper(studentId, initialValue, maxVal) {
+        const container = document.createElement('div');
+        container.className = 'hours-stepper student-stepper';
+        container.setAttribute('data-sid', studentId);
+        const decBtn = document.createElement('button');
+        decBtn.innerText = '−';
+        decBtn.className = 'decr';
+        const valueSpan = document.createElement('span');
+        valueSpan.className = 'hours-value';
+        valueSpan.innerText = initialValue;
+        const incBtn = document.createElement('button');
+        incBtn.innerText = '+';
+        incBtn.className = 'incr';
+
+        decBtn.onclick = (e) => {
+            e.stopPropagation();
+            let v = parseInt(valueSpan.innerText) || 0;
+            if (v > 0) {
+                v--;
+                valueSpan.innerText = v;
+            }
+            decBtn.disabled = (v === 0);
+            incBtn.disabled = (v >= totalHours);
+        };
+        incBtn.onclick = (e) => {
+            e.stopPropagation();
+            let v = parseInt(valueSpan.innerText) || 0;
+            if (v < totalHours) {
+                v++;
+                valueSpan.innerText = v;
+            }
+            incBtn.disabled = (v >= totalHours);
+            decBtn.disabled = (v === 0);
+        };
+        if (totalHours === 0) {
+            decBtn.disabled = true;
+            incBtn.disabled = true;
+        } else {
+            decBtn.disabled = (initialValue <= 0);
+            incBtn.disabled = (initialValue >= totalHours);
+        }
+        container.appendChild(decBtn);
+        container.appendChild(valueSpan);
+        container.appendChild(incBtn);
+        return container;
+    }
+
+    // Φόρτωση προηγούμενης ύλης – με ημερομηνία + ύλη (για το τρέχον μάθημα)
+    async function loadPreviousSyllabus(courseUnitId) {
+        const container = previousSyllabusContent;
+        container.innerHTML = '<div class="syllabus-empty">Φόρτωση...</div>';
+        try {
+            const data = await apiRequest(`/course-units/${courseUnitId}/lessons`);
+            const lessons = data.lessons || [];
+            const today = new Date().toISOString().split('T')[0];
+            const previous = lessons.filter(l => l.lesson_date !== today);
+            if (previous.length === 0) {
+                container.innerHTML = '<div class="syllabus-empty">Δεν υπάρχουν προηγούμενες καταχωρήσεις ύλης.</div>';
+                return;
+            }
+            let html = '<table class="syllabus-table"><tbody>';
+            previous.forEach(lesson => {
+                const dateStr = lesson.lesson_date;
+                const content = lesson.syllabus_content || '—';
+                html += `<tr><td class="syllabus-date">${dateStr}</td><td class="syllabus-content">${content}</td></tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        } catch (err) {
+            container.innerHTML = `<div class="syllabus-empty">Σφάλμα φόρτωσης ύλης: ${err.message}</div>`;
+        }
+    }
+
+    // Φόρτωση ύλης άλλων μαθημάτων – μόνο κείμενο (χωρίς ημερομηνίες/ώρες)
+    async function loadDepartmentSyllabus(courseId) {
+        const container = deptSyllabusContent;
+        container.innerHTML = '<div class="syllabus-empty">Φόρτωση...</div>';
+        if (!courseId) {
+            container.innerHTML = '';
+            return;
+        }
+        try {
+            const data = await apiRequest(`/course-units/${courseId}/lessons`);
+            const lessons = data.lessons || [];
+            if (lessons.length === 0) {
+                container.innerHTML = '<div class="syllabus-empty">Δεν υπάρχουν καταχωρήσεις ύλης για αυτό το μάθημα.</div>';
+                return;
+            }
+            // Ταξινόμηση από πιο πρόσφατο σε παλαιότερο
+            lessons.sort((a, b) => (a.lesson_date < b.lesson_date ? 1 : -1));
+            let html = '<ul class="other-syllabus-list">';
+            lessons.forEach(lesson => {
+                const content = lesson.syllabus_content || '—';
+                if (content.trim() !== '') {
+                    html += `<li>${content}</li>`;
+                }
+            });
+            html += '</ul>';
+            container.innerHTML = html;
+        } catch (err) {
+            container.innerHTML = `<div class="syllabus-empty">Σφάλμα φόρτωσης: ${err.message}</div>`;
+        }
+    }
+
+    // Φόρτωση όλων των course units (για το dropdown των άλλων μαθημάτων)
+    async function fetchAllCourseUnits() {
+        try {
+            const data = await apiRequest('/course-units');
+            allCourseUnits = data.course_units || [];
+        } catch (err) {
+            console.error('Σφάλμα φόρτωσης όλων των μαθημάτων:', err);
+            allCourseUnits = [];
+        }
+    }
+
+    function populateDepartmentDropdown(specialty, department, semester) {
+        deptCourseSelect.innerHTML = '<option value="">-- Επιλέξτε μάθημα --</option>';
+        const filtered = allCourseUnits.filter(cu =>
+            cu.specialty_name === specialty &&
+            cu.department === department &&
+            cu.semester === semester
+        );
+        if (filtered.length === 0) {
+            deptCourseSelect.innerHTML = '<option value="">-- Δεν υπάρχουν άλλα μαθήματα σε αυτό το τμήμα --</option>';
+            deptSyllabusContent.innerHTML = '';
+            return;
+        }
+        filtered.sort((a, b) => a.lesson_name.localeCompare(b.lesson_name));
+        filtered.forEach(cu => {
+            const opt = document.createElement('option');
+            opt.value = cu.id;
+            let label = cu.lesson_name;
+            if (cu.type_indicator) label += ` (${cu.type_indicator})`;
+            if (cu.team && cu.team.trim()) label += ` / ${cu.team}`;
+            opt.textContent = label;
+            deptCourseSelect.appendChild(opt);
+        });
+    }
+
+    async function loadStudents(courseUnitId, weeklyHours = 0) {
+        try {
+            const data = await apiRequest(`/course-units/${courseUnitId}/students`);
+            currentStudents = data.students || [];
+            if (currentStudents.length === 0) {
+                alert('Δεν βρέθηκαν εγγεγραμμένοι μαθητές για αυτό το μάθημα.');
+                studentsSection.style.display = 'none';
+                return;
+            }
+            let todayLesson = null;
+            try {
+                const lessonRes = await apiRequest(`/course-units/${courseUnitId}/today-lesson`);
+                if (lessonRes.exists) {
+                    todayLesson = lessonRes;
+                    totalHours = lessonRes.hours;
+                    totalHoursSpan.innerText = totalHours;
+                    syllabusTextarea.value = lessonRes.syllabus_content;
+                } else {
+                    totalHours = weeklyHours > 0 ? weeklyHours : 1;
+                    totalHoursSpan.innerText = totalHours;
+                    syllabusTextarea.value = '';
+                }
+            } catch(e) {
+                console.warn("Δεν βρέθηκε καταχώρηση για σήμερα", e);
+                totalHours = weeklyHours > 0 ? weeklyHours : 1;
+                totalHoursSpan.innerText = totalHours;
+            }
+            renderStudentsList();
+            if (todayLesson && todayLesson.absences && todayLesson.absences.length > 0) {
+                const absMap = {};
+                todayLesson.absences.forEach(ab => { absMap[ab.student_id] = ab.hours_absent; });
+                document.querySelectorAll('.student-row').forEach(row => {
+                    const sid = parseInt(row.getAttribute('data-student-id'));
+                    const hoursInput = row.querySelector('.hours-value');
+                    if (absMap[sid] !== undefined) {
+                        const val = absMap[sid];
+                        hoursInput.innerText = val;
+                        const decBtn = row.querySelector('.decr');
+                        const incBtn = row.querySelector('.incr');
+                        if (val <= 0) decBtn.disabled = true;
+                        else decBtn.disabled = false;
+                        if (val >= totalHours) incBtn.disabled = true;
+                        else incBtn.disabled = false;
+                    }
+                });
+            } else {
+                document.querySelectorAll('.student-stepper .hours-value').forEach(span => span.innerText = '0');
+            }
+            updateTotalHoursUI();
+            studentsSection.style.display = 'block';
+        } catch (err) {
+            showError('Σφάλμα φόρτωσης μαθητών: ' + err.message);
+        }
+    }
+
+    function renderStudentsList() {
+        studentsListDiv.innerHTML = '';
+        currentStudents.forEach(student => {
+            const row = document.createElement('div');
+            row.className = 'student-row';
+            row.setAttribute('data-student-id', student.id);
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'student-info';
+            infoDiv.innerHTML = `<div><span class="student-amk">${student.amk || '—'}</span> <span class="student-name">${student.surname} ${student.name}</span></div>`;
+            const stepper = createStudentStepper(student.id, 0, totalHours);
+            row.appendChild(infoDiv);
+            row.appendChild(stepper);
+            studentsListDiv.appendChild(row);
+        });
+    }
+
+    async function loadCourses() {
+        try {
+            const user = await apiRequest('/auth/check');
+            const teachersData = await apiRequest('/teachers');
+            const teacherRecord = teachersData.teachers.find(t => t.user_id === user.user_id);
+            if (!teacherRecord) {
+                showError('Δεν βρέθηκε εγγραφή εκπαιδευτή για τον λογαριασμό σας.');
+                return;
+            }
+            currentTeacherId = teacherRecord.id;
+            teacherSurname = teacherRecord.surname || '';
+            teacherName = teacherRecord.name || '';
+            teacherNameHeader.innerText = `${teacherSurname} ${teacherName}`.trim() || 'Εκπαιδευτής';
+
+            const assignmentsData = await apiRequest('/assignments');
+            const myCourses = assignmentsData.assignments.filter(a => a.teacher_id === currentTeacherId);
+            coursesList = myCourses;
+            if (coursesList.length === 0) {
+                courseSelect.innerHTML = '<option value="">-- Δεν έχετε ανατεθειμένα μαθήματα --</option>';
+                studentsSection.style.display = 'none';
+                await fetchAllCourseUnits();
+                return;
+            }
+            courseSelect.innerHTML = '';
+            coursesList.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.course_unit_id;
+                opt.dataset.weeklyHours = c.weekly_hours || 0;
+                let text = `${c.lesson_name} (${c.specialty_name} - ${c.department}`;
+                if (c.team && c.team.trim() !== '') {
+                    text += ` / ${c.team}`;
+                }
+                text += `) ${c.type_indicator || ''}`.trim();
+                opt.textContent = text;
+                courseSelect.appendChild(opt);
+            });
+
+            await fetchAllCourseUnits();
+
+            if (coursesList.length > 0) {
+                const first = coursesList[0];
+                const firstId = first.course_unit_id;
+                const weekly = first.weekly_hours || 0;
+                courseSelect.value = firstId;
+                currentCourseUnitId = firstId;
+                populateDepartmentDropdown(first.specialty_name, first.department, first.semester);
+                await loadStudents(currentCourseUnitId, weekly);
+                await loadPreviousSyllabus(currentCourseUnitId);
+                if (deptCourseSelect.options.length > 1) {
+                    const firstDeptCourse = deptCourseSelect.options[1];
+                    deptCourseSelect.value = firstDeptCourse.value;
+                    await loadDepartmentSyllabus(parseInt(firstDeptCourse.value));
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            showError('Σφάλμα φόρτωσης μαθημάτων: ' + err.message);
+        }
+    }
+
+    async function submitAttendance() {
+        if (!currentCourseUnitId || !currentTeacherId) {
+            showError('Δεν έχει επιλεγεί μάθημα');
+            return;
+        }
+        if (totalHours === 0) {
+            showError('Πρέπει να ορίσετε ώρες διδασκαλίας (τουλάχιστον 1).');
+            return;
+        }
+        const syllabus = syllabusTextarea.value.trim();
+        if (!syllabus) {
+            showError('Συμπληρώστε την ύλη / σημειώσεις.');
+            return;
+        }
+        const absences = [];
+        document.querySelectorAll('.student-row').forEach(row => {
+            const sid = parseInt(row.getAttribute('data-student-id'));
+            const stepper = row.querySelector('.student-stepper');
+            const hoursSpan = stepper.querySelector('.hours-value');
+            const ha = parseInt(hoursSpan.innerText) || 0;
+            if (ha > 0) absences.push({ student_id: sid, hours_absent: ha });
+        });
+        
+        const payload = {
+            course_unit_id: currentCourseUnitId,
+            instructor_id: currentTeacherId,
+            total_hours: totalHours,
+            syllabus: syllabus,
+            absences: absences
+        };
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Υποβολή...';
+        try {
+            const result = await apiRequest('/attendance/submit', { method: 'POST', body: JSON.stringify(payload) });
+            let msg = '';
+            if (result.absences_registered === 0) {
+                msg = '✅ Δεν καταχωρήθηκε καμία απουσία.';
+            } else if (result.absences_registered === 1) {
+                msg = '✅ Καταχωρήθηκε απουσία σε 1 καταρτιζόμενο/η.';
+            } else {
+                msg = `✅ Καταχωρήθηκαν απουσίες σε ${result.absences_registered} καταρτιζόμενους/ες.`;
+            }
+            alert(msg);
+            await loadPreviousSyllabus(currentCourseUnitId);
+            const deptSelected = parseInt(deptCourseSelect.value);
+            if (deptSelected === currentCourseUnitId) {
+                await loadDepartmentSyllabus(deptSelected);
+            }
+        } catch (err) {
+            showError('Σφάλμα υποβολής: ' + err.message);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = '✅ Υποβολή';
+        }
+    }
+
+    // Event Listeners
+    decrTotalBtn.addEventListener('click', () => changeTotal(-1));
+    incrTotalBtn.addEventListener('click', () => changeTotal(1));
+
+    courseSelect.addEventListener('change', async () => {
+        const selected = parseInt(courseSelect.value);
+        if (isNaN(selected)) {
+            studentsSection.style.display = 'none';
+            return;
+        }
+        currentCourseUnitId = selected;
+        const selectedOption = courseSelect.options[courseSelect.selectedIndex];
+        const weekly = parseInt(selectedOption.dataset.weeklyHours) || 0;
+        const courseObj = coursesList.find(c => c.course_unit_id === selected);
+        if (courseObj) {
+            populateDepartmentDropdown(courseObj.specialty_name, courseObj.department, courseObj.semester);
+            await loadStudents(selected, weekly);
+            await loadPreviousSyllabus(selected);
+            if (deptCourseSelect.options.length > 1) {
+                const firstDeptCourse = deptCourseSelect.options[1];
+                deptCourseSelect.value = firstDeptCourse.value;
+                await loadDepartmentSyllabus(parseInt(firstDeptCourse.value));
+            } else {
+                deptSyllabusContent.innerHTML = '';
+            }
+        }
+    });
+
+    deptCourseSelect.addEventListener('change', async () => {
+        const val = parseInt(deptCourseSelect.value);
+        if (isNaN(val) || val <= 0) {
+            deptSyllabusContent.innerHTML = '';
+            return;
+        }
+        await loadDepartmentSyllabus(val);
+    });
+
+    submitBtn.addEventListener('click', submitAttendance);
+
+    const deleteTodayBtn = document.getElementById('deleteTodayBtn');
+    deleteTodayBtn.addEventListener('click', async () => {
+        if (!currentCourseUnitId) {
+            showError('Δεν έχει επιλεγεί μάθημα');
+            return;
+        }
+        if (!confirm('Θα διαγραφεί ΟΛΟΚΛΗΡΗ η σημερινή καταχώρηση (ύλη και απουσίες). Είστε σίγουρος;')) return;
+        try {
+            const res = await fetch(`/attendance/today/${currentCourseUnitId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            if (!res.ok) throw new Error(await res.text());
+            alert('Η καταχώρηση διαγράφηκε');
+            window.location.reload();
+        } catch (err) {
+            showError('Σφάλμα διαγραφής: ' + err.message);
+        }
+    });
+
+    loadCourses();
+</script>
+</body>
+</html>

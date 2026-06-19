@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ηλεκτρονικό απουσιολόγιο - ΣΑΕΚ</title>
+    <style>
+        body { font-family: system-ui; background: #f1f5f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #f5f1ee; padding: 2rem; border-radius: 24px; width: 320px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: all 0.2s ease; }
+        input, button { width: 100%; padding: 12px; margin-top: 12px; border-radius: 16px; border: 1px solid #ccc; box-sizing: border-box; font-size: 1rem; }
+        button { background: #2563eb; color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
+        button:active { transform: scale(0.98); }
+        .error { color: #dc2626; margin-top: 12px; text-align: center; font-size: 0.9rem; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div style="text-align: center; margin-bottom: 1rem;">
+        <img src="/static/logo.png" alt="Λογότυπο ΣΑΕΚ" style="max-width: 200px; width: 100%; height: auto;">
+    </div>
+    <h2 style="text-align: center;">Απουσιολόγιο</h2>
+    <input type="email" id="email" placeholder="Διεύθυνση email" autocomplete="email">
+    <input type="text" id="otp" class="hidden" placeholder="Εισάγετε τον κωδικό που λάβατε" autocomplete="off">
+    <button id="actionBtn">Αποστολή κωδικού OTP</button>
+    <div id="errorMsg" class="error"></div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let pendingEmail = null;
+        let step = 'email'; // 'email' or 'otp'
+
+        const emailInput = document.getElementById('email');
+        const otpInput = document.getElementById('otp');
+        const actionBtn = document.getElementById('actionBtn');
+        const errorMsg = document.getElementById('errorMsg');
+
+        function showError(msg) {
+            errorMsg.innerText = msg;
+            setTimeout(() => errorMsg.innerText = '', 5000);
+        }
+
+        actionBtn.onclick = async () => {
+            if (step === 'email') {
+                // Step 1: Request OTP
+                const email = emailInput.value.trim();
+                if (!email) {
+                    showError('Παρακαλώ εισάγετε το email σας.');
+                    return;
+                }
+                if (!email.includes('@')) {
+                    showError('Μη έγκυρη διεύθυνση email.');
+                    return;
+                }
+                pendingEmail = email;
+                actionBtn.disabled = true;
+                actionBtn.innerText = 'Αποστολή...';
+                try {
+                    const res = await fetch('/auth/request-otp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email }),
+                        credentials: 'include'
+                    });
+                    if (res.ok) {
+                        // Switch to OTP step
+                        step = 'otp';
+                        emailInput.classList.add('hidden');
+                        otpInput.classList.remove('hidden');
+                        emailInput.value = '';
+                        actionBtn.innerText = 'Σύνδεση';
+                        errorMsg.innerText = '';
+                    } else {
+                        const err = await res.json();
+                        showError(err.detail || 'Αποτυχία αποστολής OTP.');
+                    }
+                } catch(e) {
+                    console.error(e);
+                    showError('Σφάλμα δικτύου.');
+                } finally {
+                    actionBtn.disabled = false;
+                }
+            } else {
+                // Step 2: Verify OTP
+                const code = otpInput.value.trim();
+                if (!code) {
+                    showError('Εισάγετε τον κωδικό που λάβατε.');
+                    return;
+                }
+                actionBtn.disabled = true;
+                actionBtn.innerText = 'Επαλήθευση...';
+                try {
+                    const res = await fetch('/auth/verify-otp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: pendingEmail, code }),
+                        credentials: 'include'
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.role === 'instructor') {
+                            window.location.href = '/teacher.html';
+                        } else if (data.role === 'student') {
+                            window.location.href = '/student.html';
+                        } else {
+                            window.location.href = '/';
+                        }
+                    } else {
+                        const err = await res.json();
+                        showError(err.detail || 'Λανθασμένος κωδικός.');
+                    }
+                } catch(e) {
+                    console.error(e);
+                    showError('Σφάλμα επαλήθευσης.');
+                } finally {
+                    actionBtn.disabled = false;
+                }
+            }
+        };
+    });
+</script>
+</body>
+</html>
