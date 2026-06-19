@@ -569,7 +569,7 @@ def get_cookie_settings(request: Request):
     if "localhost" in host or "127.0.0.1" in host or host.startswith("192.168.") or host.startswith("10."):
         return {"domain": None, "secure": False}
     else:
-        # Για παραγωγή, χρησιμοποιούμε το base domain (π.χ. saekreth.gr)
+        # Για παραγωγή, χρησιμοποιούμε το base domain (π.χ. saek_example.gr)
         # Αφαιρούμε το subdomain (π.χ. grammateia. ή apousies.)
         parts = host.split('.')
         if len(parts) >= 2:
