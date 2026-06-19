@@ -24,7 +24,7 @@ git clone https://github.com/johnvigl/saek-attendance.git
 cd saek-attendance
 
 2. Δημιουργήστε το αρχείο .env
-'''cp .env.example .env'''
+cp .env.example .env
 Επεξεργασία .env   
   ### α. αλλάξτε τα credentials (χρησιμοποιήστε ισχυρά passwords)
   ### β. ορίστε τα domains (για παράδειγμα):
@@ -62,7 +62,7 @@ docker-compose up -d
 
 Τα CSV αρχεία πρέπει να είναι σε UTF-8 με κόμμα (,) ως διαχωριστικό.
 
-Δομή φακέλων
+## Δομή φακέλων
 
 saek-attendance/
 ├── app/
@@ -77,7 +77,7 @@ saek-attendance/
 ├── README.md
 └── LICENSE               # GNU GPL v3
 
-Συχνά προβλήματα
+## Συχνά προβλήματα
 
 - "Database not available"
     Βεβαιωθείτε ότι το container saek_db τρέχει (docker ps).
@@ -98,7 +98,5 @@ saek-attendance/
 ## Συνεισφορά
 
 Αν θέλετε να βελτιώσετε το σύστημα, κάντε fork, εφαρμόστε αλλαγές και αποστείλετε pull request.
-
-
 
 ΣΑΕΚ - Σύστημα Απουσιολογίου & Βιβλίου Ύλης
