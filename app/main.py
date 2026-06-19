@@ -205,12 +205,12 @@ async def print_page(request: Request, current_user = Depends(require_role("admi
 @app.get("/")
 async def root(request: Request):
     host = request.headers.get("host", "").lower()
+    token = request.cookies.get("session_token")
     
-    # Αν είναι localhost, πάμε στο login (ή σε ό,τι θέλουμε)
-    if is_localhost(host):
-        # Ελέγχουμε session για να δούμε αν είναι admin ή instructor
-        token = request.cookies.get("session_token")
-        if token:
+    # Έλεγχος session για να πάρουμε τον ρόλο
+    user_role = None
+    if token:
+        try:
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
             cursor.execute("SELECT user_role FROM sessions WHERE token = %s AND expires_at > NOW()", (token,))
@@ -218,13 +218,39 @@ async def root(request: Request):
             cursor.close()
             conn.close()
             if session:
-                if session["user_role"] == "instructor":
-                    return FileResponse("teacher.html")
-                elif session["user_role"] == "student":
-                    return FileResponse("student.html")
-                elif session["user_role"] == "admin":
-                    return FileResponse("admin-dashboard.html")
-        return FileResponse("login.html")
+                user_role = session["user_role"]
+        except Exception:
+            pass
+    
+    # Αν είμαστε στο admin domain
+    if ADMIN_DOMAIN and ADMIN_DOMAIN in host:
+        if user_role == "admin":
+            return FileResponse("admin-dashboard.html")
+        else:
+            return FileResponse("admin-login.html")
+    
+    # Αν είμαστε στο frontend domain
+    if FRONTEND_DOMAIN and FRONTEND_DOMAIN in host:
+        if user_role == "instructor":
+            return FileResponse("teacher.html")
+        elif user_role == "student":
+            return FileResponse("student.html")
+        else:
+            return FileResponse("login.html")
+    
+    # Αν είμαστε σε localhost (development mode)
+    if "localhost" in host or "127.0.0.1" in host:
+        if user_role == "admin":
+            return FileResponse("admin-dashboard.html")
+        elif user_role == "instructor":
+            return FileResponse("teacher.html")
+        elif user_role == "student":
+            return FileResponse("student.html")
+        else:
+            return FileResponse("login.html")
+    
+    # Για οποιοδήποτε άλλο host (μη αναγνωρισμένο) – επιστρέφουμε 404
+    return JSONResponse(status_code=404, content={"detail": "Not found"})
     
     # Admin dashboard για ADMIN_DOMAIN
     if ADMIN_DOMAIN and ADMIN_DOMAIN in host:
