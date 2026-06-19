@@ -25,7 +25,6 @@ services:
       - "5411:5411"
     networks:
       - default
-      - saekreth_net   # αν υπάρχει εξωτερικό δίκτυο
     environment:
       DB_HOST: ${DB_HOST}
       DB_NAME: ${DB_NAME}
@@ -37,7 +36,3 @@ services:
       ADMIN_DOMAIN: ${ADMIN_DOMAIN}
     env_file:
       - .env
-
-networks:
-  saekreth_net:
-    external: true

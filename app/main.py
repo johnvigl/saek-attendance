@@ -562,6 +562,22 @@ async def send_otp_email(to_email: str, otp_code: str) -> bool:
     # Εκτέλεση της blocking λειτουργίας σε ξεχωριστό thread
     return await asyncio.to_thread(_send)
 
+def get_cookie_settings(request: Request):
+    """Επιστρέφει domain και secure flag για το cookie ανάλογα με το host."""
+    host = request.headers.get("host", "").lower()
+    # Αν είναι localhost ή IP, απενεργοποιούμε domain και secure
+    if "localhost" in host or "127.0.0.1" in host or host.startswith("192.168.") or host.startswith("10."):
+        return {"domain": None, "secure": False}
+    else:
+        # Για παραγωγή, χρησιμοποιούμε το base domain (π.χ. saekreth.gr)
+        # Αφαιρούμε το subdomain (π.χ. grammateia. ή apousies.)
+        parts = host.split('.')
+        if len(parts) >= 2:
+            base_domain = '.'.join(parts[-2:])  # παίρνουμε τα δύο τελευταία τμήματα
+            return {"domain": f".{base_domain}", "secure": True}
+        else:
+            return {"domain": None, "secure": False}
+
 # -------------------- AUTH ENDPOINTS --------------------
 @app.post("/auth/request-otp")
 async def request_otp(request: Request, background_tasks: BackgroundTasks):
@@ -672,7 +688,8 @@ async def verify_otp(request: Request, response: Response):
     conn.close()
     otp_verify_tracker[email] = time.time()
     resp = JSONResponse(content={"message": "Login successful", "role": user_role})
-    resp.set_cookie(key="session_token", value=token, httponly=True, secure=True, samesite="lax", domain=".saekreth.gr", max_age=7*24*3600)
+    cookie_settings = get_cookie_settings(request)
+    rest.set_cookie(key="session_token", value=token, httponly=True, secure=cookie_settings["secure"], samesite="lax", domain=cookie_settings["domain"],max_age=7*24*3600)
     return resp
 
 @app.post("/auth/logout")
@@ -2818,13 +2835,15 @@ async def admin_login(request: Request, response: Response):
     conn3.close()
 
     resp = JSONResponse(content={"message": "Admin login successful"})
+    
+    cookie_settings = get_cookie_settings(request)
     resp.set_cookie(
         key="session_token",
         value=token,
         httponly=True,
-        secure=True,
+        secure=cookie_settings["secure"],
         samesite="lax",
-        domain=".saekreth.gr",
+        domain=cookie_settings["domain"],
         max_age=7*24*3600
     )
     return resp
