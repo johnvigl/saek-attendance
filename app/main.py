@@ -368,7 +368,7 @@ def init_db():
                 weekly_hours INT NOT NULL DEFAULT 1,
                 semester_id INT,
                 FOREIGN KEY (semester_id) REFERENCES semesters(id),
-                UNIQUE KEY unique_course_semester (specialty_name, semester, department, team, lesson_name, type_indicator, semester_id)
+                UNIQUE KEY unique_course_semester (specialty_name, semester, department, team, lesson_name, type_indicator, semester_id, weekly_hours)
             )
         """)
 
