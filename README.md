@@ -20,38 +20,43 @@
 ## Εγκατάσταση
 
 1. Κατεβάστε τον κώδικα
+
 `git clone https://github.com/johnvigl/saek-attendance.git`
 
-`cd saek-attendance`
+2. Εκτελέστε
 
-2. Δημιουργήστε το αρχείο .env
-cp .env.example .env
-Επεξεργασία .env   
-  ### α. αλλάξτε τα credentials (χρησιμοποιήστε ισχυρά passwords)
-  ### β. ορίστε τα domains (για παράδειγμα):
-            Yποστηρίζονται 2 ξεχωριστά subdomains για τη διαχείριση και τους εκπαιδευτές/καταρτιζόμενους.
-            ```python
-            FRONTEND_DOMAIN=apousies.saek_example.gr
-            ADMIN_DOMAIN=grammateia.saek_example.gr
-            ```
+`cd saek-attendance` (είσοδος στο φάκελο)
 
-3. Εκκίνηση
+`cp .env.example .env` (δημιουργία .env από το πρότυπο)
+`nano .env` (Επεξεργασία του αρχείου .env)
+
+2.1 αλλάξτε τα credentials (χρησιμοποιήστε ισχυρά passwords)
+2.2 ορίστε τα domains (για παράδειγμα):
+Yποστηρίζονται 2 ξεχωριστά subdomains για τη διαχείριση και τους εκπαιδευτές/καταρτιζόμενους.
+```python
+FRONTEND_DOMAIN=apousies.saek_example.gr
+ADMIN_DOMAIN=grammateia.saek_example.gr
+```
+
+3. Εκκίνηση της εφαρμογής
+
 `docker-compose up -d`
 
 4. Πρόσβαση
-    Εκπαιδευτές/Φοιτητές: http://localhost:5411
-    Γραμματεία/Admin: http://localhost:5411
+    Εκπαιδευτές/Φοιτητές: http://localhost:5411 ή apousies.saek_example.gr
+    Γραμματεία/Admin: http://localhost:5411 ή grammateia.saek_example.gr
 
 5. Αρχική σύνδεση
-    Admin: username admin, password admin (αλλάξτε το αμέσως)
-    Εκπαιδευτές/Καταρτιζόμενοι: Σύνδεση με email + OTP (απαιτεί ρύθμιση email sender)
+    Admin username: `admin`, password `admin` (αλλάξτε τα αμέσως)
+    Εκπαιδευτές/Καταρτιζόμενοι: Σύνδεση με email + OTP (απαιτεί ρύθμιση λογαριασμού email αποστολής)
 
 ## Ρύθμιση Email (για OTP και αποστολή μαζικών email)
     Συνδεθείτε ως admin.
     Πηγαίνετε στις Ρυθμίσεις → Email.
     Προσθέστε έναν λογαριασμό αποστολέα (π.χ. Gmail με App Password).
     Ενεργοποιήστε τον λογαριασμό (checkbox "Ενεργός").
-    Ορίστε το "Προς" και "CC" παραλήπτες (προαιρετικά).
+    Ορίστε τον "Προς" και τους "CC" παραλήπτες (προαιρετικά).
+    Οι παραλήπτες από την εφαρμογή (εκπαιδευτές και καταρτιζόμενοι) είναι πάντοτε με κρυφή κοινοποίηση (BCC)
 
 ## Εισαγωγή δεδομένων (CSV)
 
@@ -81,6 +86,7 @@ saek-attendance/
 ├── README.md
 └── LICENSE               # GNU GPL v3
 ```
+
 ## Συχνά προβλήματα
 
 - "Database not available"
