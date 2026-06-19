@@ -83,22 +83,26 @@ def require_role(*allowed_roles):
         return current_user
     return role_checker
 
+# -------------------- DOMAINS FROM ENV --------------------
+FRONTEND_DOMAIN = os.getenv("FRONTEND_DOMAIN", "localhost")
+ADMIN_DOMAIN = os.getenv("ADMIN_DOMAIN", "localhost")
+
 # ---------- Helper για host check (επιστρέφει 404) ----------
 def require_grammateia_host(request: Request):
     host = request.headers.get("host", "").lower()
-    if "grammateia.saekreth.gr" not in host:
+    # Αν ο ADMIN_DOMAIN είναι "localhost", επιτρέπουμε οποιοδήποτε host (για ανάπτυξη)
+    if ADMIN_DOMAIN != "localhost" and ADMIN_DOMAIN not in host:
         raise HTTPException(status_code=404, detail="Not found")
 
-# ---------- Middleware προστασίας docs (μόνο από grammateia & admin) ----------
+# ---------- Middleware προστασίας docs ----------
 @app.middleware("http")
 async def protect_docs(request: Request, call_next):
-    # Ελέγχουμε μόνο για paths τεκμηρίωσης
     if request.url.path in ("/docs", "/redoc", "/openapi.json") or request.url.path.startswith(("/docs/", "/redoc/")):
-        # 1. Έλεγχος host (404 αν δεν είναι grammateia)
+        # Έλεγχος host (μόνο αν ADMIN_DOMAIN != "localhost")
         host = request.headers.get("host", "").lower()
-        if "grammateia.saekreth.gr" not in host:
+        if ADMIN_DOMAIN != "localhost" and ADMIN_DOMAIN not in host:
             return JSONResponse(status_code=404, content={"detail": "Not found"})
-        # 2. Έλεγχος admin session
+        # Έλεγχος admin session
         token = request.cookies.get("session_token")
         if not token:
             return JSONResponse(status_code=403, content={"detail": "Forbidden"})
@@ -115,12 +119,19 @@ async def protect_docs(request: Request, call_next):
             return JSONResponse(status_code=403, content={"detail": "Forbidden"})
     return await call_next(request)
 
-# CORS
-origins = [ "https://apousies.saekreth.gr", "https://grammateia.saekreth.gr" ]
+# CORS - δυναμικά origins
+cors_origins = []
+if FRONTEND_DOMAIN and FRONTEND_DOMAIN != "localhost":
+    cors_origins.append(f"https://{FRONTEND_DOMAIN}")
+if ADMIN_DOMAIN and ADMIN_DOMAIN != "localhost":
+    cors_origins.append(f"https://{ADMIN_DOMAIN}")
+# Αν δεν υπάρχουν domains, επιτρέπουμε τα πάντα (μόνο για ανάπτυξη)
+if not cors_origins:
+    cors_origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["Content-Type"],
@@ -139,7 +150,6 @@ async def teacher_page(request: Request):
         conn.close()
         if session and session["user_role"] == "instructor":
             return FileResponse("teacher.html")
-    # Αν όχι, πήγαινε στη σελίδα login
     return FileResponse("login.html")
 
 @app.get("/admin-settings.html")
@@ -153,12 +163,17 @@ async def login_page():
 
 @app.get("/admin-login.html")
 async def admin_login_page(request: Request):
-    require_grammateia_host(request)
+    # Το admin-login επιτρέπεται μόνο από admin domain (ή localhost)
+    host = request.headers.get("host", "").lower()
+    if ADMIN_DOMAIN != "localhost" and ADMIN_DOMAIN not in host:
+        raise HTTPException(status_code=404, detail="Not found")
     return FileResponse("admin-login.html")
 
 @app.get("/admin-dashboard.html")
 async def admin_dashboard_page(request: Request, current_user = Depends(require_role("admin"))):
-    require_grammateia_host(request)
+    host = request.headers.get("host", "").lower()
+    if ADMIN_DOMAIN != "localhost" and ADMIN_DOMAIN not in host:
+        raise HTTPException(status_code=404, detail="Not found")
     return FileResponse("admin-dashboard.html")
 
 @app.get("/print.html")
@@ -167,14 +182,14 @@ async def print_page(request: Request, current_user = Depends(require_role("admi
 
 @app.get("/")
 async def root(request: Request):
-    host = request.headers.get("host", "")
+    host = request.headers.get("host", "").lower()
     
-    # Admin dashboard για grammateia
-    if "grammateia.saekreth.gr" in host:
+    # Admin dashboard για ADMIN_DOMAIN
+    if ADMIN_DOMAIN != "localhost" and ADMIN_DOMAIN in host:
         return FileResponse("admin-dashboard.html")
     
-    # Αποκλειστικά για apousies.saekreth.gr
-    if "apousies.saekreth.gr" in host:
+    # Frontend για FRONTEND_DOMAIN
+    if FRONTEND_DOMAIN != "localhost" and FRONTEND_DOMAIN in host:
         token = request.cookies.get("session_token")
         if token:
             conn = get_db_connection()
@@ -187,14 +202,12 @@ async def root(request: Request):
                 if session["user_role"] == "instructor":
                     return FileResponse("teacher.html")
                 elif session["user_role"] == "student":
-                    # Όταν δημιουργηθεί το student.html, θα εξυπηρετείται
                     return FileResponse("student.html")
                 elif session["user_role"] == "admin":
                     return FileResponse("login.html")
-        # Αν δεν υπάρχει έγκυρο session, πήγαινε στο login
         return FileResponse("login.html")
     
-    # Για οποιοδήποτε άλλο host (π.χ. localhost ή IP) – default
+    # Για localhost ή άλλους hosts – προσαρμοσμένο
     return {"status": "Online", "port": 5411, "database": "Connected" if connection_pool else "Disconnected"}
 
 # -------------------- DB CONNECTION --------------------

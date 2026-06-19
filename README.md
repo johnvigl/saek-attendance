@@ -38,6 +38,14 @@ docker-compose up -d
     Admin: username admin, password admin (αλλάξτε το αμέσως)
     Εκπαιδευτές/Καταρτιζόμενοι: Σύνδεση με email + OTP (απαιτεί ρύθμιση email sender)
 
+## Ρύθμιση Domains
+
+Το σύστημα υποστηρίζει ξεχωριστά subdomains για τη γραμματεία και τους εκπαιδευτές/φοιτητές.
+
+Στο αρχείο `.env` ορίστε για παράδειγμα:
+FRONTEND_DOMAIN=apousies.saek_example.gr
+ADMIN_DOMAIN=grammateia.saek_example.gr
+
 ## Ρύθμιση Email (για OTP και αποστολή μαζικών email)
     Συνδεθείτε ως admin.
     Πηγαίνετε στις Ρυθμίσεις → Email.

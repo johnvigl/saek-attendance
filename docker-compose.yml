@@ -6,12 +6,14 @@ services:
     ports:
       - "127.0.0.1:3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: my_very_strong_root_password # Να αλλαχθεί οπωσδήποτε
-      MYSQL_DATABASE: saek_attendance
-      MYSQL_USER: saek_admin
-      MYSQL_PASSWORD: my_very_strong_user_password # Να αλλαχθεί οπωσδήποτε
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - ./db_data:/var/lib/mysql
+    env_file:
+      - .env
 
   app:
     build: ./app
@@ -21,9 +23,21 @@ services:
       - db
     ports:
       - "5411:5411"
+    networks:
+      - default
+      - saekreth_net   # αν υπάρχει εξωτερικό δίκτυο
     environment:
-      DB_HOST: db
-      DB_NAME: saek_attendance
-      DB_USER: saek_admin
-      DB_PASS: my_very_strong_user_password # Να αλλαχθεί οπωσδήποτε
-      TZ: Europe/Athens
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      TZ: ${TZ}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      FRONTEND_DOMAIN: ${FRONTEND_DOMAIN}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN}
+    env_file:
+      - .env
+
+networks:
+  saekreth_net:
+    external: true
