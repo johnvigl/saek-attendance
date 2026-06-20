@@ -341,6 +341,7 @@
     let absencesStudents = [];
     let absencesSpecialtySemesterList = [];
     let absencesFiltered = [];
+    let emailSenders = [];
 
     async function api(url, options={}) {
         const res = await fetch(url, { credentials: 'include', ...options, headers: { 'Content-Type': 'application/json', ...options.headers } });
@@ -832,6 +833,22 @@
 
     let emailSignature = "";
     let emailSignatureLoaded = false;
+    
+    async function loadEmailSenders() {
+        try {
+            const res = await fetch('/admin/settings', { credentials: 'include' });
+            if (res.ok) {
+                const data = await res.json();
+                emailSenders = data.senders || [];
+                emailSenders.sort((a, b) => a.id - b.id);
+            } else {
+                console.warn('Failed to load email senders');
+            }
+        } catch(e) {
+            console.error('Error loading email senders:', e);
+        }
+    }    
+    
     async function loadEmailSignature(force = false) {
         if (emailSignatureLoaded && !force) return; // ήδη φορτώθηκε
         try {
@@ -853,15 +870,41 @@
             await loadEmailSignature();
         }
 
+        // Φόρτωση senders
+        await loadEmailSenders();
+        
+        // Γέμισμα dropdown
+        const senderSelect = document.getElementById('emailSenderSelect');
+        senderSelect.innerHTML = '';
+        if (emailSenders.length === 0) {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = '-- Δεν υπάρχουν λογαριασμοί --';
+            opt.disabled = true;
+            senderSelect.appendChild(opt);
+        } else {
+            emailSenders.forEach(sender => {
+                const opt = document.createElement('option');
+                opt.value = sender.name;
+                opt.textContent = sender.email;
+                if (sender.is_active) {
+                    opt.selected = true;
+                }
+                senderSelect.appendChild(opt);
+            });
+        }        
         let recipients = [];
         let recipientType = '';
+        // Για την καρτέλα assignments, θα αποθηκεύουμε τα emails εδώ
+        window.currentTeacherEmails = [];
+        window.currentStudentEmails = [];
 
         if (currentTab === 'teachers') {
             recipients = teachersFiltered.map(t => t.mail).filter(e => e && e.trim());
             recipientType = 'εκπαιδευτές';
         } else if (currentTab === 'students') {
             recipients = studentsFiltered.map(s => s.mail).filter(e => e && e.trim());
-            recipientType = 'καταρτιζόμενους';
+            recipientType = 'καταρτιζόμενοι';
         } else if (currentTab === 'assignments') {
             const courseIds = [...new Set(assignmentsFiltered.map(a => a.course_unit_id))];
             if (courseIds.length === 0) { alert('Δεν υπάρχουν μαθήματα στα φιλτραρισμένα assignments.'); return; }
@@ -877,24 +920,37 @@
                 const dataStudents = await resStudents.json();
                 if (resStudents.ok) studentEmails = dataStudents.emails;
             } catch(err) { alert('Σφάλμα ανάκτησης emails: ' + err.message); return; }
-            currentTeacherEmails = teacherEmails; currentStudentEmails = studentEmails;
+            
+            // Αποθήκευση για μετέπειτα χρήση
+            window.currentTeacherEmails = teacherEmails;
+            window.currentStudentEmails = studentEmails;
+            
             emailRecipientsOptionsDiv.innerHTML = `<div style="display: flex; gap: 24px; align-items: center; margin: 12px 0;"><label style="display: inline-flex; align-items: center; gap: 6px;"><input type="checkbox" id="emailIncludeTeachers" checked> Εκπαιδευτές</label><label style="display: inline-flex; align-items: center; gap: 6px;"><input type="checkbox" id="emailIncludeStudents" checked> Καταρτιζόμενοι</label></div>`;
             document.getElementById('emailIncludeTeachers').disabled = (teacherEmails.length === 0);
             document.getElementById('emailIncludeStudents').disabled = (studentEmails.length === 0);
             emailRecipientsInfo.innerText = `Εκπαιδευτές: ${teacherEmails.length} | Καταρτιζόμενοι: ${studentEmails.length}`;
-            emailSubject.value = ''; emailMessage.value = "\n\n\n" + emailSignature; emailSenderSelect.value = 'no-reply';
+            emailSubject.value = ''; emailMessage.value = "\n\n\n" + emailSignature;
             emailModal.style.display = 'flex';
             return;
         } else if (currentTab === 'absences') {
             recipients = absencesFiltered.map(s => s.mail).filter(e => e && e.trim());
-            recipientType = 'καταρτιζόμενους (από την καρτέλα Απουσίες)';
+            recipientType = 'καταρτιζόμενοι (από την καρτέλα Απουσίες)';
         } else {
             alert('Η λειτουργία email είναι διαθέσιμη μόνο από τις καρτέλες Εκπαιδευτές, Καταρτιζόμενοι, Αναθέσεις και Απουσίες.');
             return;
         }
 
+        // Έλεγχος για ύπαρξη παραληπτών (για teachers, students, absences)
         if (recipients.length === 0) {
-            alert(`Δεν υπάρχουν ${recipientType} με email.`);
+            let msg = '';
+            if (currentTab === 'teachers') {
+                msg = 'Δεν υπάρχουν εκπαιδευτές με email.';
+            } else if (currentTab === 'students') {
+                msg = 'Δεν υπάρχουν καταρτιζόμενοι με email.';
+            } else if (currentTab === 'absences') {
+                msg = 'Δεν υπάρχουν καταρτιζόμενοι (από την καρτέλα Απουσίες) με email.';
+            }
+            alert(msg);
             return;
         }
 
@@ -907,27 +963,39 @@
         window.currentRecipients = recipients;
     };
 
-    document.getElementById('cancelEmailBtn').onclick = () => { emailModal.style.display = 'none'; };
+    document.getElementById('cancelEmailBtn').addEventListener('click', function() { emailModal.style.display = 'none'; });
     document.getElementById('sendEmailBtn').onclick = async () => {
         const subject = emailSubject.value.trim();
-        let message = emailMessage.value;
-        if (!message.includes('Σ.Α.Ε.Κ. Ρεθύμνου')) message += signature;
-        const sender = emailSenderSelect.value;
+        const message = emailMessage.value;
+        const sender = document.getElementById('emailSenderSelect').value;
+        
         if (!subject) { alert('Παρακαλώ συμπληρώστε το θέμα.'); return; }
         if (!message.trim()) { alert('Παρακαλώ γράψτε ένα μήνυμα.'); return; }
+        
         let recipients = [];
-        if (currentTab === 'teachers' || currentTab === 'students') recipients = window.currentRecipients || [];
-        else if (currentTab === 'assignments') {
-            if (document.getElementById('emailIncludeTeachers')?.checked) recipients.push(...currentTeacherEmails);
-            if (document.getElementById('emailIncludeStudents')?.checked) recipients.push(...currentStudentEmails);
+        if (currentTab === 'teachers' || currentTab === 'students') {
+            recipients = window.currentRecipients || [];
+        } else if (currentTab === 'assignments') {
+            if (document.getElementById('emailIncludeTeachers')?.checked) recipients.push(...window.currentTeacherEmails);
+            if (document.getElementById('emailIncludeStudents')?.checked) recipients.push(...window.currentStudentEmails);
             recipients = [...new Set(recipients)];
+        } else if (currentTab === 'absences') {
+            recipients = window.currentRecipients || [];
         }
+        
         if (recipients.length === 0) { alert('Δεν επιλέχθηκαν παραλήπτες.'); return; }
+        
         try {
             const res = await fetch('/admin/send-bulk-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sender, subject, message, recipients }), credentials: 'include' });
             const result = await res.json();
-            if (res.ok) { alert(`Το μήνυμα στάλθηκε σε ${recipients.length} παραλήπτες (BCC).`); emailModal.style.display = 'none'; }
-            else { alert('Σφάλμα: ' + (result.detail || 'Άγνωστο σφάλμα')); }
+            if (res.ok) {
+                const count = recipients.length;
+                const word = count === 1 ? 'παραλήπτη' : 'παραλήπτες';
+                alert(`Το μήνυμα στάλθηκε με κρυφή κοινοποίηση σε ${count} ${word}.`);
+                emailModal.style.display = 'none';
+            } else {
+                alert('Σφάλμα: ' + (result.detail || 'Άγνωστο σφάλμα'));
+            }
         } catch(err) { alert('Σφάλμα αποστολής: ' + err.message); }
     };
 
