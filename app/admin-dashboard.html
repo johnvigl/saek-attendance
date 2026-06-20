@@ -107,7 +107,7 @@
     border: none !important;
     font-size: 1.5rem !important;
     padding: 0;
-    margin-right: 20px;
+    margin-right: 0px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -165,7 +165,111 @@
     border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
+/* Κουμπιά modals – λίγο μικρότερα από τα tabs */
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+    padding: 8px 20px;          /* μικρότερο padding */
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.85rem;         /* μικρότερη γραμματοσειρά */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 36px;              /* ελαφρώς χαμηλότερο από τα 40px των tabs */
+    white-space: nowrap;
+}
 
+.btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.btn-secondary:hover {
+    background: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+    transform: scale(0.98);
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+}
+
+.btn-danger:active {
+    transform: scale(0.98);
+}
+
+/* Διάταξη κουμπιών σε modal – με λογικά μεγέθη */
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.modal-actions .btn-primary,
+.modal-actions .btn-secondary,
+.modal-actions .btn-danger {
+    flex: 0 1 auto;            /* δεν τεντώνονται υπερβολικά */
+    min-width: 80px;
+}
+/* Μηνύματα επιτυχίας/σφάλματος (όπως στο admin-settings) */
+.message {
+    padding: 8px 16px;
+    border-radius: 20px;
+    margin-top: 8px;
+    margin-bottom: 12px;
+    font-weight: 500;
+    display: none; /* αρχικά κρυφά */
+}
+
+.message.success {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    display: block;
+}
+
+.message.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    display: block;
+}
     </style>
 </head>
 <body>
@@ -182,7 +286,7 @@
                     <button class="tab-btn" data-tab="absences">Απουσίες</button>
                 </div>
             </div>
-            <a href="/print.html" target="_blank" style="text-decoration: none; margin-right: 12px;">
+            <a href="/print.html" target="_blank" style="text-decoration: none; margin-right: 0px;">
                 <button class="settings-btn" title="Εκτυπώσεις" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">🖨️</button>
             </a>
             <button id="settingsBtn" class="settings-btn" title="Ρυθμίσεις" style="background: none; border: none; font-size: 0.5rem; cursor: pointer;">⚙️</button>
@@ -296,9 +400,40 @@
 </div>
 
 <!-- Modals (unchanged) -->
-<div id="addTeacherModal" class="modal"><div class="modal-content"><h3>Νέος Εκπαιδευτής</h3><input type="text" id="newTeacherSurname" placeholder="Επώνυμο"><input type="text" id="newTeacherName" placeholder="Όνομα"><input type="email" id="newTeacherMail" placeholder="Email"><input type="text" id="newTeacherPhone" placeholder="Τηλέφωνο"><button id="confirmAddTeacherBtn">Αποθήκευση</button><button id="cancelAddTeacherBtn">Άκυρο</button></div></div>
-<div id="addCourseModal" class="modal"><div class="modal-content"><h3>Νέο Μάθημα</h3><input type="text" id="newCourseName" placeholder="Μάθημα"><input type="text" id="newCourseSpecialty" placeholder="Ειδικότητα"><input type="text" id="newCourseSemester" placeholder="Εξάμηνο (π.χ. Α, Β, Γ)"><input type="text" id="newCourseDept" placeholder="Τμήμα (π.χ. Α1)"><input type="text" id="newCourseTeam" placeholder="Ομάδα (προαιρετικό)"><select id="newCourseType"><option value="">-- Τύπος --</option><option value="Ε">Ε</option><option value="Θ">Θ</option></select><input type="number" id="newCourseWeeklyHours" placeholder="Εβδομαδιαίες ώρες" value="2" min="1" step="1"><input type="text" id="newCourseClassroom" placeholder="Αίθουσα (προαιρετικό)"><button id="confirmAddCourseBtn">Αποθήκευση</button><button id="cancelAddCourseBtn">Άκυρο</button></div></div>
-
+<div id="addTeacherModal" class="modal">
+    <div class="modal-content">
+        <h3>👤 Νέος Εκπαιδευτής</h3>
+        <input type="text" id="newTeacherSurname" placeholder="Επώνυμο">
+        <input type="text" id="newTeacherName" placeholder="Όνομα">
+        <input type="email" id="newTeacherMail" placeholder="Email">
+        <input type="text" id="newTeacherPhone" placeholder="Τηλέφωνο">
+        <div class="modal-actions">
+            <button id="confirmAddTeacherBtn" class="btn-primary">💾 Αποθήκευση</button>
+            <button id="cancelAddTeacherBtn" class="btn-secondary">Άκυρο</button>
+        </div>
+    </div>
+</div>
+<div id="addCourseModal" class="modal">
+    <div class="modal-content">
+        <h3>📘 Νέο Μάθημα</h3>
+        <input type="text" id="newCourseName" placeholder="Μάθημα">
+        <input type="text" id="newCourseSpecialty" placeholder="Ειδικότητα">
+        <input type="text" id="newCourseSemester" placeholder="Εξάμηνο (π.χ. Α, Β, Γ)">
+        <input type="text" id="newCourseDept" placeholder="Τμήμα (π.χ. Α1)">
+        <input type="text" id="newCourseTeam" placeholder="Ομάδα (προαιρετικό)">
+        <select id="newCourseType">
+            <option value="">-- Τύπος --</option>
+            <option value="Ε">Ε</option>
+            <option value="Θ">Θ</option>
+        </select>
+        <input type="number" id="newCourseWeeklyHours" placeholder="Εβδομαδιαίες ώρες" value="2" min="1" step="1">
+        <input type="text" id="newCourseClassroom" placeholder="Αίθουσα (προαιρετικό)">
+        <div class="modal-actions">
+            <button id="confirmAddCourseBtn" class="btn-primary">💾 Αποθήκευση</button>
+            <button id="cancelAddCourseBtn" class="btn-secondary">Άκυρο</button>
+        </div>
+    </div>
+</div>
 <!-- Email Modal with conditional checkboxes -->
 <div id="emailModal" class="modal">
     <div class="modal-content">
@@ -320,8 +455,154 @@
         </div>
     </div>
 </div>
-<div id="addAssignmentModal" class="modal"><div class="modal-content"><h3>Νέα Ανάθεση</h3><select id="modalTeacherSelect"></select><select id="modalCourseSelect"></select><button id="confirmAddAssignmentBtn">Αποθήκευση</button><button id="cancelAddAssignmentBtn">Άκυρο</button></div></div>
+<div id="addAssignmentModal" class="modal">
+    <div class="modal-content">
+        <h3>🔗 Νέα Ανάθεση</h3>
+        <select id="modalTeacherSelect"></select>
+        <select id="modalCourseSelect"></select>
+        <div class="modal-actions">
+            <button id="confirmAddAssignmentBtn" class="btn-primary">💾 Αποθήκευση</button>
+            <button id="cancelAddAssignmentBtn" class="btn-secondary">Άκυρο</button>
+        </div>
+    </div>
+</div>
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal" style="display: none; align-items: flex-start; padding-top: 30px; background: rgba(0,0,0,0.6);">
+    <div class="modal-content" style="max-width: 1100px; max-height: 90vh; overflow-y: auto; width: 95%; padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="/static/logo.png" alt="Λογότυπο" style="height: 32px; width: auto;">
+                <h2 style="margin: 0;">⚙ Ρυθμίσεις</h2>
+            </div>
+            <button id="closeSettingsBtn" style="background: none; border: none; font-size: 1.8rem; cursor: pointer; padding: 0 8px;">✕</button>
+        </div>
+        
+        <!-- Tabs των ρυθμίσεων -->
+        <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+            <button class="settings-tab-btn tab-btn active" data-settings-tab="semesters">Εξάμηνα</button>
+            <button class="settings-tab-btn tab-btn" data-settings-tab="senders">Email</button>
+            <button class="settings-tab-btn tab-btn" data-settings-tab="signature">Διάφορα</button>
+            <button class="settings-tab-btn tab-btn" data-settings-tab="admins">Διαχειριστές</button>
+        </div>
 
+        <!-- Tab: Υπογραφή + CC + Όνομα μονάδας -->
+        <div id="settings-signatureTab" class="tab-pane active">
+            <label>Ονομασία μονάδας</label>
+            <input type="text" id="settings-unitName" placeholder="π.χ. ΣΑΕΚ Ρεθύμνου">
+            <button id="settings-saveUnitNameBtn" class="btn-primary">💾 Αποθήκευση</button>
+            <div id="settings-unitNameMsg" class="message"></div>
+        </div>
+
+        <!-- Tab: Λογαριασμοί αποστολής -->
+        <div id="settings-sendersTab" class="tab-pane">
+            <label>Υπογραφή (θα προστίθεται αυτόματα στο τέλος κάθε email)</label>
+            <textarea id="settings-signatureText" rows="6" style="font-family: monospace;"></textarea>
+            <button id="settings-saveSignatureBtn" class="btn-primary">💾 Αποθήκευση υπογραφής</button>
+            <div id="settings-signatureMsg" class="message"></div>
+            <hr>
+            <label>Παραλήπτης "Προς" (θα λαμβάνει το email ως κύριος παραλήπτης)</label>
+            <input type="email" id="settings-toRecipient" placeholder="π.χ. grammateia@saekreth.gr">
+            <button id="settings-saveToRecipientBtn" class="btn-primary">💾 Αποθήκευση</button>
+            <div id="settings-toRecipientMsg" class="message"></div>            
+            <hr>
+            <label>Κοινοποίηση "CC" (προαιρετικά, διαχωρισμός με κόμμα)</label>
+            <input type="text" id="settings-ccRecipients" placeholder="π.χ. director@saek.gr, secretariat@saek.gr">
+            <button id="settings-saveCcBtn" class="btn-primary">💾 Αποθήκευση CC</button>
+            <div id="settings-ccMsg" class="message"></div>
+            <hr>
+            <h3>Προσθήκη νέου λογαριασμού</h3>
+            <input type="text" id="settings-senderName" placeholder="Ονομασία (π.χ. no-reply)">
+            <input type="email" id="settings-senderEmail" placeholder="Email αποστολέα">
+            <input type="text" id="settings-senderHost" placeholder="SMTP Host (π.χ. smtp.gmail.com)" value="smtp.gmail.com">
+            <input type="number" id="settings-senderPort" placeholder="SMTP Port" value="587">
+            <input type="text" id="settings-senderUsername" placeholder="Όνομα χρήστη (συνήθως το email)">
+            <input type="password" id="settings-senderPassword" placeholder="Κωδικός (App Password)">
+            <button id="settings-addSenderBtn" class="btn-primary">➕ Προσθήκη</button>
+            <div id="settings-senderMsg" class="message"></div>
+            <h3>Υπάρχοντες λογαριασμοί</h3>
+            <table id="settings-sendersTable">
+                <thead><tr><th>ID</th><th>Ονομασία</th><th>Email</th><th>SMTP</th><th>Ενεργός</th><th>Ενέργειες</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Tab: Διαχειριστές -->
+        <div id="settings-adminsTab" class="tab-pane">
+            <h3>Προσθήκη νέου διαχειριστή</h3>
+            <input type="text" id="settings-adminUsername" placeholder="Όνομα χρήστη (email)">
+            <input type="password" id="settings-adminPassword" placeholder="Κωδικός">
+            <button id="settings-addAdminBtn" class="btn-primary">➕ Προσθήκη διαχειριστή</button>
+            <div id="settings-adminMsg" class="message"></div>
+            <h3>Υπάρχοντες διαχειριστές</h3>
+            <table id="settings-adminsTable">
+                <thead><tr><th>ID</th><th>Username</th><th>Ενέργειες</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Tab: Εξάμηνα -->
+        <div id="settings-semestersTab" class="tab-pane">
+            <h3>Δημιουργία νέου εξαμήνου</h3>
+            <input type="text" id="settings-newSemesterName" placeholder="Όνομα (π.χ. 2026β)">
+            <input type="date" id="settings-newSemesterStart" placeholder="Ημερομηνία έναρξης">
+            <input type="date" id="settings-newSemesterEnd" placeholder="Ημερομηνία λήξης">
+            <button id="settings-addSemesterBtn" class="btn-primary">➕ Δημιουργία</button>
+            <div id="settings-semesterMsg" class="message"></div>
+            <h3>Υπάρχοντα εξάμηνα</h3>
+            <table id="settings-semestersTable">
+                <thead><tr><th>ID</th><th>Όνομα</th><th>Έναρξη</th><th>Λήξη</th><th>Ενεργό</th><th>Ενέργειες</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <button id="closeSettingsBtnBottom" class="btn-secondary">← Επιστροφή</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modals για επεξεργασία sender και semester (μέσα στο settings modal) -->
+<div id="settings-editSenderModal" class="modal" style="display: none; background: rgba(0,0,0,0.5);">
+    <div class="modal-content" style="max-width: 500px;">
+        <h3>✏️ Επεξεργασία λογαριασμού αποστολής</h3>
+        <input type="hidden" id="settings-editSenderId">
+        <label>Ονομασία:</label>
+        <input type="text" id="settings-editSenderName">
+        <label>Email:</label>
+        <input type="email" id="settings-editSenderEmail">
+        <label>SMTP Host:</label>
+        <input type="text" id="settings-editSenderHost" value="smtp.gmail.com">
+        <label>SMTP Port:</label>
+        <input type="number" id="settings-editSenderPort" value="587">
+        <label>Username:</label>
+        <input type="text" id="settings-editSenderUsername">
+        <label>Password (αφήστε κενό για να μην αλλάξει):</label>
+        <input type="password" id="settings-editSenderPassword">
+        <label><input type="checkbox" id="settings-editSenderActive"> Ενεργός</label>
+        <div class="modal-actions">
+            <button id="settings-saveSenderChangesBtn" class="btn-primary">💾 Αποθήκευση</button>
+            <button id="settings-cancelEditSenderBtn" class="btn-secondary">Άκυρο</button>
+        </div>
+    </div>
+</div>
+
+<div id="settings-editSemesterModal" class="modal" style="display: none; background: rgba(0,0,0,0.5);">
+    <div class="modal-content" style="max-width: 500px;">
+        <h3>✏️ Επεξεργασία εξαμήνου</h3>
+        <input type="hidden" id="settings-editSemesterId">
+        <label>Όνομα:</label>
+        <input type="text" id="settings-editSemesterName">
+        <label>Ημερομηνία έναρξης:</label>
+        <input type="date" id="settings-editSemesterStart">
+        <label>Ημερομηνία λήξης:</label>
+        <input type="date" id="settings-editSemesterEnd">
+        <label><input type="checkbox" id="settings-editSemesterActive"> Ενεργό</label>
+        <div class="modal-actions">
+            <button id="settings-saveSemesterChangesBtn" class="btn-primary">💾 Αποθήκευση</button>
+            <button id="settings-cancelEditSemesterBtn" class="btn-secondary">Άκυρο</button>
+        </div>
+    </div>
+</div>
 <script>
     let currentTab = 'teachers';
     let editingId = null;
@@ -799,7 +1080,7 @@
     }
 
     // Settings and add buttons
-    document.getElementById('settingsBtn').onclick = () => { window.location.href = '/admin-settings.html'; };
+    //document.getElementById('settingsBtn').onclick = () => { window.location.href = '/admin-settings.html'; };
     document.getElementById('semesterSelect').onchange = () => {
         const newId = parseInt(document.getElementById('semesterSelect').value);
         if (newId) {
@@ -808,20 +1089,220 @@
         }
     };
 
+    function getFriendlyErrorMessage(error, context) {
+        let msg = error.message || String(error);
+        
+        // Αν το μήνυμα είναι ήδη φιλικό, το επιστρέφουμε
+        if (msg.includes('υπάρχει ήδη') || msg.includes('προστέθηκε επιτυχώς')) {
+            return msg;
+        }
+        
+        // Κοινά μηνύματα
+        if (msg.includes('already exists') || msg.includes('Duplicate entry')) {
+            if (context === 'teacher') {
+                return 'Ο εκπαιδευτής με αυτό το email υπάρχει ήδη στο τρέχον εξάμηνο.';
+            }
+            if (context === 'course') {
+                return 'Το μάθημα υπάρχει ήδη με τα ίδια χαρακτηριστικά (ειδικότητα, τμήμα, ομάδα, τύπος).';
+            }
+            if (context === 'assignment') {
+                return 'Η ανάθεση υπάρχει ήδη.';
+            }
+        }
+        
+        if (msg.includes('foreign key')) {
+            return 'Ο εκπαιδευτής ή το μάθημα δεν βρέθηκε. Ελέγξτε ότι υπάρχουν.';
+        }
+        
+        if (msg.includes('not found')) {
+            return 'Το στοιχείο δεν βρέθηκε. Ελέγξτε την επιλογή σας.';
+        }
+        
+        // Επιστροφή του αρχικού μηνύματος αν δεν ταιριάζει με κάποιο
+        return msg;
+    }
+
     // Add teacher
-    document.getElementById('addTeacherBtn').onclick = () => { document.getElementById('addTeacherModal').style.display = 'flex'; };
-    document.getElementById('cancelAddTeacherBtn').onclick = () => { document.getElementById('addTeacherModal').style.display = 'none'; };
-    document.getElementById('confirmAddTeacherBtn').onclick = async () => { const surname = document.getElementById('newTeacherSurname').value.trim(), name = document.getElementById('newTeacherName').value.trim(), mail = document.getElementById('newTeacherMail').value.trim(), phone = document.getElementById('newTeacherPhone').value.trim(); if (!surname || !name || !mail) { alert('Συμπληρώστε Επώνυμο, Όνομα και Email'); return; } try { await api('/admin/teachers', { method: 'POST', body: JSON.stringify({ surname, name, mail, phone }) }); await loadAllTeachers(); document.getElementById('addTeacherModal').style.display = 'none'; document.getElementById('newTeacherSurname').value = ''; document.getElementById('newTeacherName').value = ''; document.getElementById('newTeacherMail').value = ''; document.getElementById('newTeacherPhone').value = ''; } catch(err) { alert('Σφάλμα: ' + err.message); } };
+    document.getElementById('addTeacherBtn').onclick = () => {
+        document.getElementById('addTeacherModal').style.display = 'flex';
+        // Καθαρισμός τυχόν προηγούμενων μηνυμάτων σφάλματος
+        // (αν έχεις κάποιο div για μήνυμα, το καθαρίζεις)
+    };
+    document.getElementById('cancelAddTeacherBtn').onclick = () => {
+        document.getElementById('addTeacherModal').style.display = 'none';
+    };
+    document.getElementById('confirmAddTeacherBtn').onclick = async () => {
+        const surname = document.getElementById('newTeacherSurname').value.trim();
+        const name = document.getElementById('newTeacherName').value.trim();
+        const mail = document.getElementById('newTeacherMail').value.trim();
+        const phone = document.getElementById('newTeacherPhone').value.trim();
+        
+        if (!surname || !name || !mail) {
+            alert('Συμπληρώστε Επώνυμο, Όνομα και Email.');
+            return;
+        }
+        
+        // Απενεργοποίηση του κουμπιού για να μην γίνει διπλή υποβολή
+        const btn = document.getElementById('confirmAddTeacherBtn');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Αποθήκευση...';
+        
+        try {
+            await api('/admin/teachers', {
+                method: 'POST',
+                body: JSON.stringify({ surname, name, mail, phone })
+            });
+            await loadAllTeachers();
+            // Κλείσιμο modal και καθαρισμός πεδίων
+            document.getElementById('addTeacherModal').style.display = 'none';
+            document.getElementById('newTeacherSurname').value = '';
+            document.getElementById('newTeacherName').value = '';
+            document.getElementById('newTeacherMail').value = '';
+            document.getElementById('newTeacherPhone').value = '';
+            alert('✅ Ο εκπαιδευτής προστέθηκε επιτυχώς!');
+        } catch(err) {
+            // Το modal παραμένει ανοιχτό, αλλά τα πεδία παραμένουν συμπληρωμένα
+            // για να μπορεί ο χρήστης να διορθώσει
+            const friendlyMsg = getFriendlyErrorMessage(err, 'teacher');
+            alert('❌ ' + friendlyMsg);
+        } finally {
+            // Επαναφορά κουμπιού
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    };
 
     // Add course
-    document.getElementById('addCourseBtn').onclick = () => { document.getElementById('addCourseModal').style.display = 'flex'; };
-    document.getElementById('cancelAddCourseBtn').onclick = () => { document.getElementById('addCourseModal').style.display = 'none'; };
-    document.getElementById('confirmAddCourseBtn').onclick = async () => { const lesson_name = document.getElementById('newCourseName').value.trim(), specialty_name = document.getElementById('newCourseSpecialty').value.trim(), semester = document.getElementById('newCourseSemester').value.trim(), department = document.getElementById('newCourseDept').value.trim(), team = document.getElementById('newCourseTeam').value.trim(), type_indicator = document.getElementById('newCourseType').value, weekly_hours = parseInt(document.getElementById('newCourseWeeklyHours').value) || 1, classroom = document.getElementById('newCourseClassroom').value.trim(); if (!lesson_name || !specialty_name || !semester || !department) { alert('Συμπληρώστε τα υποχρεωτικά πεδία (Μάθημα, Ειδικότητα, Εξάμηνο, Τμήμα).'); return; } try { await api('/admin/course-units', { method: 'POST', body: JSON.stringify({ lesson_name, specialty_name, semester, department, team, type_indicator, classroom, weekly_hours }) }); await loadAllCourses(); document.getElementById('addCourseModal').style.display = 'none'; document.getElementById('newCourseName').value = ''; document.getElementById('newCourseSpecialty').value = ''; document.getElementById('newCourseSemester').value = ''; document.getElementById('newCourseDept').value = ''; document.getElementById('newCourseTeam').value = ''; document.getElementById('newCourseType').value = ''; document.getElementById('newCourseClassroom').value = ''; } catch(err) { alert('Σφάλμα: ' + err.message); } };
-
+    document.getElementById('addCourseBtn').onclick = () => {
+        document.getElementById('addCourseModal').style.display = 'flex';
+    };
+    document.getElementById('cancelAddCourseBtn').onclick = () => {
+        document.getElementById('addCourseModal').style.display = 'none';
+    };
+    document.getElementById('confirmAddCourseBtn').onclick = async () => {
+        const lesson_name = document.getElementById('newCourseName').value.trim();
+        const specialty_name = document.getElementById('newCourseSpecialty').value.trim();
+        const semester = document.getElementById('newCourseSemester').value.trim();
+        const department = document.getElementById('newCourseDept').value.trim();
+        const team = document.getElementById('newCourseTeam').value.trim();
+        const type_indicator = document.getElementById('newCourseType').value;
+        const weekly_hours = parseInt(document.getElementById('newCourseWeeklyHours').value) || 1;
+        const classroom = document.getElementById('newCourseClassroom').value.trim();
+        
+        if (!lesson_name || !specialty_name || !semester || !department) {
+            alert('Συμπληρώστε τα υποχρεωτικά πεδία (Μάθημα, Ειδικότητα, Εξάμηνο, Τμήμα).');
+            return;
+        }
+        
+        const btn = document.getElementById('confirmAddCourseBtn');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Αποθήκευση...';
+        
+        try {
+            await api('/admin/course-units', {
+                method: 'POST',
+                body: JSON.stringify({
+                    lesson_name,
+                    specialty_name,
+                    semester,
+                    department,
+                    team,
+                    type_indicator,
+                    classroom,
+                    weekly_hours
+                })
+            });
+            await loadAllCourses();
+            document.getElementById('addCourseModal').style.display = 'none';
+            document.getElementById('newCourseName').value = '';
+            document.getElementById('newCourseSpecialty').value = '';
+            document.getElementById('newCourseSemester').value = '';
+            document.getElementById('newCourseDept').value = '';
+            document.getElementById('newCourseTeam').value = '';
+            document.getElementById('newCourseType').value = '';
+            document.getElementById('newCourseClassroom').value = '';
+            alert('✅ Το μάθημα προστέθηκε επιτυχώς!');
+        } catch(err) {
+            const friendlyMsg = getFriendlyErrorMessage(err, 'course');
+            alert('❌ ' + friendlyMsg);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    };
+    
     // Add assignment
-    document.getElementById('addAssignmentBtn').onclick = async () => { const teachers = await api('/admin/teachers'), courses = await api('/admin/course-units'); const teacherSelect = document.getElementById('modalTeacherSelect'), courseSelect = document.getElementById('modalCourseSelect'); teacherSelect.innerHTML = '<option value="">-- Εκπαιδευτής --</option>'; teachers.teachers.forEach(t => { teacherSelect.innerHTML += `<option value="${t.id}">${t.surname} ${t.name}</option>`; }); courseSelect.innerHTML = '<option value="">-- Μάθημα --</option>'; courses.course_units.forEach(c => { courseSelect.innerHTML += `<option value="${c.id}">${c.lesson_name} (${c.specialty_name})</option>`; }); document.getElementById('addAssignmentModal').style.display = 'flex'; };
-    document.getElementById('cancelAddAssignmentBtn').onclick = () => { document.getElementById('addAssignmentModal').style.display = 'none'; };
-    document.getElementById('confirmAddAssignmentBtn').onclick = async () => { const teacherId = document.getElementById('modalTeacherSelect').value, courseId = document.getElementById('modalCourseSelect').value; if (!teacherId || !courseId) { alert('Επιλέξτε εκπαιδευτή και μάθημα'); return; } try { await api('/admin/assignments', { method: 'POST', body: JSON.stringify({ teacher_id: parseInt(teacherId), course_unit_id: parseInt(courseId) }) }); await loadAllAssignments(); document.getElementById('addAssignmentModal').style.display = 'none'; } catch(err) { alert('Σφάλμα: ' + err.message); } };
+    document.getElementById('addAssignmentBtn').onclick = async () => {
+        try {
+            const [teachers, courses] = await Promise.all([
+                api('/admin/teachers'),
+                api('/admin/course-units')
+            ]);
+            
+            const teacherSelect = document.getElementById('modalTeacherSelect');
+            const courseSelect = document.getElementById('modalCourseSelect');
+            
+            teacherSelect.innerHTML = '<option value="">-- Εκπαιδευτής --</option>';
+            (teachers.teachers || []).forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = `${t.surname} ${t.name}`;
+                teacherSelect.appendChild(opt);
+            });
+            
+            courseSelect.innerHTML = '<option value="">-- Μάθημα --</option>';
+            (courses.course_units || []).forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = `${c.lesson_name} (${c.specialty_name})`;
+                courseSelect.appendChild(opt);
+            });
+            
+            document.getElementById('addAssignmentModal').style.display = 'flex';
+        } catch(err) {
+            alert('❌ Σφάλμα φόρτωσης δεδομένων: ' + getFriendlyErrorMessage(err, 'assignment'));
+        }
+    };
+
+    document.getElementById('cancelAddAssignmentBtn').onclick = () => {
+        document.getElementById('addAssignmentModal').style.display = 'none';
+    };
+
+    document.getElementById('confirmAddAssignmentBtn').onclick = async () => {
+        const teacherId = document.getElementById('modalTeacherSelect').value;
+        const courseId = document.getElementById('modalCourseSelect').value;
+        
+        if (!teacherId || !courseId) {
+            alert('Επιλέξτε εκπαιδευτή και μάθημα.');
+            return;
+        }
+        
+        const btn = document.getElementById('confirmAddAssignmentBtn');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Αποθήκευση...';
+        
+        try {
+            await api('/admin/assignments', {
+                method: 'POST',
+                body: JSON.stringify({
+                    teacher_id: parseInt(teacherId),
+                    course_unit_id: parseInt(courseId)
+                })
+            });
+            await loadAllAssignments();
+            document.getElementById('addAssignmentModal').style.display = 'none';
+            alert('✅ Η ανάθεση προστέθηκε επιτυχώς!');
+        } catch(err) {
+            const friendlyMsg = getFriendlyErrorMessage(err, 'assignment');
+            alert('❌ ' + friendlyMsg);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    };
 
     // Email logic (unchanged, but ensure recipients lists are correct)
     const emailModal = document.getElementById('emailModal');
@@ -1038,6 +1519,346 @@
             .catch(e => console.warn(e));
     }, 200);
 
+    // ============================================================
+    // SETTINGS MODAL LOGIC (ενσωματωμένο admin-settings)
+    // ============================================================
+
+    // DOM elements for settings (με prefix "settings-")
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettingsBtns = document.querySelectorAll('#closeSettingsBtn, #closeSettingsBtnBottom');
+
+    // Άνοιγμα modal
+    document.getElementById('settingsBtn').onclick = () => {
+        settingsModal.style.display = 'flex';
+        // Φόρτωση δεδομένων όταν ανοίγει το modal
+        loadSettingsData();
+    };
+
+    // Κλείσιμο modal
+    closeSettingsBtns.forEach(btn => {
+        btn.onclick = () => {
+            settingsModal.style.display = 'none';
+        };
+    });
+
+    // Κλείσιμο modal όταν πατάμε έξω από το περιεχόμενο
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) {
+            settingsModal.style.display = 'none';
+        }
+    });
+
+    // Κλείσιμο modal όταν πατάμε αλλού
+    document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            settingsModal.style.display = 'none';
+        });
+    });
+
+    // ---------- Settings: Tab switching ----------
+    document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.settingsTab;
+            document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('#settingsModal .tab-pane').forEach(pane => pane.classList.remove('active'));
+            document.getElementById('settings-' + tab + 'Tab').classList.add('active');
+            if (tab === 'senders') loadSettingsSenders();
+            if (tab === 'admins') loadSettingsAdmins();
+            if (tab === 'semesters') loadSettingsSemesters();
+        });
+    });
+
+    // ---------- Φόρτωση όλων των ρυθμίσεων ----------
+    async function loadSettingsData() {
+        try {
+            const data = await api('/admin/settings');
+            document.getElementById('settings-signatureText').value = data.signature || '';
+            document.getElementById('settings-toRecipient').value = data.to_recipient || '';
+            document.getElementById('settings-ccRecipients').value = data.cc_recipients || '';
+            document.getElementById('settings-unitName').value = data.unit_name || '';
+        } catch(err) {
+            console.error('Failed to load settings', err);
+            showSettingsMsg('settings-signatureMsg', 'Σφάλμα φόρτωσης ρυθμίσεων', 'error');
+        }
+    }
+
+    function showSettingsMsg(divId, msg, type) {
+        const div = document.getElementById(divId);
+        if (!div) return;
+        div.textContent = msg;
+        div.className = `message ${type}`;
+        div.style.display = 'block';
+        setTimeout(() => div.style.display = 'none', 5000);
+    }
+
+    // ---------- Υπογραφή ----------
+    document.getElementById('settings-saveSignatureBtn').onclick = async () => {
+        const signature = document.getElementById('settings-signatureText').value;
+        try {
+            await api('/admin/settings/signature', { method: 'PUT', body: JSON.stringify({ signature }) });
+            showSettingsMsg('settings-signatureMsg', 'Η υπογραφή αποθηκεύτηκε', 'success');
+        } catch(err) { showSettingsMsg('settings-signatureMsg', err.message, 'error'); }
+    };
+
+    // ---------- Προς ----------
+    document.getElementById('settings-saveToRecipientBtn').onclick = async () => {
+        const to_recipient = document.getElementById('settings-toRecipient').value.trim();
+        if (!to_recipient) {
+            showSettingsMsg('settings-toRecipientMsg', 'Η διεύθυνση είναι υποχρεωτική', 'error');
+            return;
+        }
+        try {
+            await api('/admin/settings/to-recipient', { method: 'PUT', body: JSON.stringify({ to_recipient }) });
+            showSettingsMsg('settings-toRecipientMsg', 'Ο παραλήπτης "Προς" αποθηκεύτηκε', 'success');
+        } catch(err) {
+            showSettingsMsg('settings-toRecipientMsg', err.message, 'error');
+        }
+    };
+
+    // ---------- CC ----------
+    document.getElementById('settings-saveCcBtn').onclick = async () => {
+        const cc_recipients = document.getElementById('settings-ccRecipients').value;
+        try {
+            await api('/admin/settings/cc-recipients', { method: 'PUT', body: JSON.stringify({ cc_recipients }) });
+            showSettingsMsg('settings-ccMsg', 'Οι CC παραλήπτες αποθηκεύτηκαν', 'success');
+        } catch(err) { showSettingsMsg('settings-ccMsg', err.message, 'error'); }
+    };
+
+    // ---------- Όνομα μονάδας ----------
+    document.getElementById('settings-saveUnitNameBtn').onclick = async () => {
+        const unit_name = document.getElementById('settings-unitName').value.trim();
+        if (!unit_name) { showSettingsMsg('settings-unitNameMsg', 'Η ονομασία δεν μπορεί να είναι κενή', 'error'); return; }
+        try {
+            await api('/admin/settings/unit-name', { method: 'PUT', body: JSON.stringify({ unit_name }) });
+            showSettingsMsg('settings-unitNameMsg', 'Η ονομασία αποθηκεύτηκε', 'success');
+            // Ενημέρωση τίτλου σελίδας
+            document.title = `Γραμματεία ${unit_name}`;
+        } catch(err) { showSettingsMsg('settings-unitNameMsg', err.message, 'error'); }
+    };
+
+    // ---------- Λογαριασμοί αποστολής ----------
+    async function loadSettingsSenders() {
+        try {
+            const data = await api('/admin/settings');
+            const tbody = document.querySelector('#settings-sendersTable tbody');
+            tbody.innerHTML = '';
+            if (!data.senders || data.senders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6">Δεν υπάρχουν λογαριασμοί.</td></tr>';
+                return;
+            }
+            for (const s of data.senders) {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${s.id}</td>
+                    <td>${escapeHtml(s.name)}</td>
+                    <td>${escapeHtml(s.email)}</td>
+                    <td>${escapeHtml(s.smtp_host)}:${s.smtp_port}</td>
+                    <td>${s.is_active ? '✅' : '❌'}</td>
+                    <td>
+                        <button class="edit-btn" data-id="${s.id}">✏</button>
+                        <button class="delete-btn" data-id="${s.id}">🗑</button>
+                    </td>
+                `;
+                row.querySelector('.delete-btn').onclick = async () => {
+                    if (confirm('Διαγραφή λογαριασμού;')) {
+                        await api(`/admin/settings/senders/${s.id}`, { method: 'DELETE' });
+                        loadSettingsSenders();
+                    }
+                };
+                row.querySelector('.edit-btn').onclick = () => {
+                    document.getElementById('settings-editSenderId').value = s.id;
+                    document.getElementById('settings-editSenderName').value = s.name;
+                    document.getElementById('settings-editSenderEmail').value = s.email;
+                    document.getElementById('settings-editSenderHost').value = s.smtp_host;
+                    document.getElementById('settings-editSenderPort').value = s.smtp_port;
+                    document.getElementById('settings-editSenderUsername').value = s.username;
+                    document.getElementById('settings-editSenderActive').checked = s.is_active;
+                    document.getElementById('settings-editSenderPassword').value = '';
+                    document.getElementById('settings-editSenderModal').style.display = 'flex';
+                };
+            }
+        } catch(err) { showSettingsMsg('settings-senderMsg', err.message, 'error'); }
+    }
+
+    document.getElementById('settings-addSenderBtn').onclick = async () => {
+        const name = document.getElementById('settings-senderName').value.trim();
+        const email = document.getElementById('settings-senderEmail').value.trim();
+        const smtp_host = document.getElementById('settings-senderHost').value.trim();
+        const smtp_port = parseInt(document.getElementById('settings-senderPort').value);
+        const username = document.getElementById('settings-senderUsername').value.trim();
+        const password = document.getElementById('settings-senderPassword').value.trim();
+        if (!name || !email || !username || !password) {
+            showSettingsMsg('settings-senderMsg', 'Συμπληρώστε όλα τα πεδία (όνομα, email, username, password)', 'error');
+            return;
+        }
+        try {
+            await api('/admin/settings/senders', { method: 'POST', body: JSON.stringify({ name, email, smtp_host, smtp_port, username, password }) });
+            showSettingsMsg('settings-senderMsg', 'Λογαριασμός προστέθηκε', 'success');
+            document.getElementById('settings-senderName').value = '';
+            document.getElementById('settings-senderEmail').value = '';
+            document.getElementById('settings-senderUsername').value = '';
+            document.getElementById('settings-senderPassword').value = '';
+            loadSettingsSenders();
+        } catch(err) { showSettingsMsg('settings-senderMsg', err.message, 'error'); }
+    };
+
+    document.getElementById('settings-saveSenderChangesBtn').onclick = async () => {
+        const id = document.getElementById('settings-editSenderId').value;
+        const name = document.getElementById('settings-editSenderName').value.trim();
+        const email = document.getElementById('settings-editSenderEmail').value.trim();
+        const smtp_host = document.getElementById('settings-editSenderHost').value.trim();
+        const smtp_port = parseInt(document.getElementById('settings-editSenderPort').value);
+        const username = document.getElementById('settings-editSenderUsername').value.trim();
+        const password = document.getElementById('settings-editSenderPassword').value.trim();
+        const is_active = document.getElementById('settings-editSenderActive').checked;
+        const payload = {};
+        if (name) payload.name = name;
+        if (email) payload.email = email;
+        if (smtp_host) payload.smtp_host = smtp_host;
+        if (!isNaN(smtp_port)) payload.smtp_port = smtp_port;
+        if (username) payload.username = username;
+        if (password) payload.password = password;
+        payload.is_active = is_active;
+        try {
+            await api(`/admin/settings/senders/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+            loadSettingsSenders();
+            document.getElementById('settings-editSenderModal').style.display = 'none';
+            showSettingsMsg('settings-senderMsg', 'Λογαριασμός ενημερώθηκε', 'success');
+        } catch(err) { showSettingsMsg('settings-senderMsg', err.message, 'error'); }
+    };
+    document.getElementById('settings-cancelEditSenderBtn').onclick = () => {
+        document.getElementById('settings-editSenderModal').style.display = 'none';
+    };
+
+    // ---------- Διαχειριστές ----------
+    async function loadSettingsAdmins() {
+        try {
+            const data = await api('/admin/settings');
+            const tbody = document.querySelector('#settings-adminsTable tbody');
+            tbody.innerHTML = '';
+            if (!data.admins || data.admins.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3">Δεν υπάρχουν διαχειριστές.</td></tr>';
+                return;
+            }
+            for (const a of data.admins) {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${a.id}</td>
+                    <td>${escapeHtml(a.username)}</td>
+                    <td><button class="delete-btn" data-id="${a.id}">🗑</button></td>
+                `;
+                row.querySelector('.delete-btn').onclick = async () => {
+                    if (confirm(`Διαγραφή διαχειριστή ${a.username};`)) {
+                        await api(`/admin/settings/admins/${a.id}`, { method: 'DELETE' });
+                        loadSettingsAdmins();
+                    }
+                };
+            }
+        } catch(err) { showSettingsMsg('settings-adminMsg', err.message, 'error'); }
+    }
+
+    document.getElementById('settings-addAdminBtn').onclick = async () => {
+        const username = document.getElementById('settings-adminUsername').value.trim();
+        const password = document.getElementById('settings-adminPassword').value.trim();
+        if (!username || !password) {
+            showSettingsMsg('settings-adminMsg', 'Συμπληρώστε username και password', 'error');
+            return;
+        }
+        try {
+            await api('/admin/settings/admins', { method: 'POST', body: JSON.stringify({ username, password }) });
+            showSettingsMsg('settings-adminMsg', 'Διαχειριστής προστέθηκε', 'success');
+            document.getElementById('settings-adminUsername').value = '';
+            document.getElementById('settings-adminPassword').value = '';
+            loadSettingsAdmins();
+        } catch(err) { showSettingsMsg('settings-adminMsg', err.message, 'error'); }
+    };
+
+    // ---------- Εξάμηνα ----------
+    async function loadSettingsSemesters() {
+        try {
+            const data = await api('/admin/semesters');
+            const tbody = document.querySelector('#settings-semestersTable tbody');
+            tbody.innerHTML = '';
+            if (!data.semesters || data.semesters.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6">Δεν υπάρχουν εξάμηνα.</td></tr>';
+                return;
+            }
+            for (const s of data.semesters) {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${s.id}</td>
+                    <td>${escapeHtml(s.name)}</td>
+                    <td>${s.start_date || '-'}</td>
+                    <td>${s.end_date || '-'}</td>
+                    <td>${s.is_active ? '✅' : '❌'}</td>
+                    <td>
+                        <button class="edit-semester-btn" data-id="${s.id}">✏</button>
+                        <button class="delete-semester-btn" data-id="${s.id}">🗑</button>
+                    </td>
+                `;
+                row.querySelector('.delete-semester-btn').onclick = async () => {
+                    if (confirm(`Διαγραφή εξαμήνου "${s.name}";`)) {
+                        try {
+                            await api(`/admin/semesters/${s.id}`, { method: 'DELETE' });
+                            loadSettingsSemesters();
+                            // Ενημέρωση dropdown
+                            await loadSemesters();
+                        } catch(err) { showSettingsMsg('settings-semesterMsg', err.message, 'error'); }
+                    }
+                };
+                row.querySelector('.edit-semester-btn').onclick = () => {
+                    document.getElementById('settings-editSemesterId').value = s.id;
+                    document.getElementById('settings-editSemesterName').value = s.name;
+                    document.getElementById('settings-editSemesterStart').value = s.start_date || '';
+                    document.getElementById('settings-editSemesterEnd').value = s.end_date || '';
+                    document.getElementById('settings-editSemesterActive').checked = s.is_active;
+                    document.getElementById('settings-editSemesterModal').style.display = 'flex';
+                };
+            }
+        } catch(err) { showSettingsMsg('settings-semesterMsg', err.message, 'error'); }
+    }
+
+    document.getElementById('settings-addSemesterBtn').onclick = async () => {
+        const name = document.getElementById('settings-newSemesterName').value.trim();
+        const start_date = document.getElementById('settings-newSemesterStart').value;
+        const end_date = document.getElementById('settings-newSemesterEnd').value;
+        if (!name) { showSettingsMsg('settings-semesterMsg', 'Το όνομα είναι υποχρεωτικό', 'error'); return; }
+        try {
+            await api('/admin/semesters', { method: 'POST', body: JSON.stringify({ name, start_date, end_date }) });
+            showSettingsMsg('settings-semesterMsg', 'Εξάμηνο προστέθηκε', 'success');
+            document.getElementById('settings-newSemesterName').value = '';
+            document.getElementById('settings-newSemesterStart').value = '';
+            document.getElementById('settings-newSemesterEnd').value = '';
+            loadSettingsSemesters();
+            // Ενημέρωση dropdown
+            await loadSemesters();
+        } catch(err) { showSettingsMsg('settings-semesterMsg', err.message, 'error'); }
+    };
+
+    document.getElementById('settings-saveSemesterChangesBtn').onclick = async () => {
+        const id = document.getElementById('settings-editSemesterId').value;
+        const name = document.getElementById('settings-editSemesterName').value.trim();
+        const start_date = document.getElementById('settings-editSemesterStart').value;
+        const end_date = document.getElementById('settings-editSemesterEnd').value;
+        const is_active = document.getElementById('settings-editSemesterActive').checked;
+        const payload = {};
+        if (name) payload.name = name;
+        if (start_date) payload.start_date = start_date;
+        if (end_date) payload.end_date = end_date;
+        payload.is_active = is_active;
+        try {
+            await api(`/admin/semesters/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+            loadSettingsSemesters();
+            document.getElementById('settings-editSemesterModal').style.display = 'none';
+            showSettingsMsg('settings-semesterMsg', 'Εξάμηνο ενημερώθηκε', 'success');
+            // Ενημέρωση dropdown
+            await loadSemesters();
+        } catch(err) { showSettingsMsg('settings-semesterMsg', err.message, 'error'); }
+    };
+    document.getElementById('settings-cancelEditSemesterBtn').onclick = () => {
+        document.getElementById('settings-editSemesterModal').style.display = 'none';
+    };
 </script>
 </body>
 </html>
