@@ -23,7 +23,7 @@ from collections import defaultdict
 import httpx
 
 GITHUB_REPO = "johnvigl/saek-attendance"
-APP_VERSION = "2.0.0"
+APP_VERSION = "1.0.0"
 
 async def check_github_version():
     try:
