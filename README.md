@@ -27,16 +27,20 @@
 
 `cd saek-attendance` (είσοδος στο φάκελο)
 
+Αντιγράψτε το `.env.example` σε `.env` και συμπληρώστε τα στοιχεία σας.
 `cp .env.example .env` (δημιουργία .env από το πρότυπο)
 `nano .env` (Επεξεργασία του αρχείου .env)
 
-2.1 αλλάξτε τα credentials (χρησιμοποιήστε ισχυρά passwords)
-2.2 ορίστε τα domains (για παράδειγμα):
+- αλλάξτε τα credentials (χρησιμοποιήστε ισχυρά passwords)
+- ορίστε τα domains (για παράδειγμα):
 Yποστηρίζονται 2 ξεχωριστά subdomains για τη διαχείριση και τους εκπαιδευτές/καταρτιζόμενους.
 ```python
 FRONTEND_DOMAIN=apousies.saek_example.gr
 ADMIN_DOMAIN=grammateia.saek_example.gr
 ```
+- **Αν δεν έχετε external network** (π.χ. Caddy), ανοίξτε το `docker-compose.yml` και σχολιάστε:
+   - Τη γραμμή `- external_network` στο service `app`.
+   - Ολόκληρο το μπλοκ `external_network` στο τέλος του αρχείου.
 
 3. Εκκίνηση της εφαρμογής
 
