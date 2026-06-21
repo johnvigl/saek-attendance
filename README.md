@@ -28,11 +28,14 @@
 `cd saek-attendance` (είσοδος στο φάκελο)
 
 Αντιγράψτε το `.env.example` σε `.env` και συμπληρώστε τα στοιχεία σας.
+
 `cp .env.example .env` (δημιουργία .env από το πρότυπο)
+
 `nano .env` (Επεξεργασία του αρχείου .env)
 
 - αλλάξτε τα credentials (χρησιμοποιήστε ισχυρά passwords)
-- ορίστε τα domains (για παράδειγμα):
+- ορίστε τα domains (ακολουθεί παράδειγμα):
+
 Yποστηρίζονται 2 ξεχωριστά subdomains για τη διαχείριση και τους εκπαιδευτές/καταρτιζόμενους.
 ```python
 FRONTEND_DOMAIN=apousies.saek_example.gr
@@ -47,12 +50,24 @@ ADMIN_DOMAIN=grammateia.saek_example.gr
 `docker-compose up -d`
 
 4. Πρόσβαση
-    Εκπαιδευτές/Φοιτητές: http://localhost:5411 ή apousies.saek_example.gr
-    Γραμματεία/Admin: http://localhost:5411 ή grammateia.saek_example.gr
 
-5. Αρχική σύνδεση
-    Admin username: `admin`, password `admin` (αλλάξτε τα αμέσως)
-    Εκπαιδευτές/Καταρτιζόμενοι: Σύνδεση με email + OTP (απαιτεί ρύθμιση λογαριασμού email αποστολής)
+Εκπαιδευτές/Φοιτητές: http://localhost:5411 ή apousies.saek_example.gr
+
+Γραμματεία/Admin: http://localhost:5411 ή grammateia.saek_example.gr
+
+6. Αρχική σύνδεση
+Admin username: `admin`, password `admin` (αλλάξτε τα αμέσως)
+   
+Εκπαιδευτές/Καταρτιζόμενοι: Σύνδεση με email + OTP (απαιτεί ρύθμιση λογαριασμού email αποστολής)
+
+## Ενημερώσεις
+- Σε περίπτωση σημαντικής ενημέρωσης θα λαμβάνετε ειδοποίηση εντός της εφαρμογής.
+- Για να ενημερώσετε την εφαρμογή στην τελευταία έκδοση, εκτελέστε:
+
+`chmod +x update.sh`
+
+
+`./update.sh`
 
 ## Ρύθμιση Email (για OTP και αποστολή μαζικών email)
 
@@ -65,11 +80,13 @@ ADMIN_DOMAIN=grammateia.saek_example.gr
 
 ## Εισαγωγή δεδομένων (CSV)
 
-Ως admin, μπορείτε να εισάγετε: `http://localhost:5411/docs`
+Ως admin, μπορείτε να εισάγετε αρχείο csv με τα δεδομένα της σχολής στη διεύθυνση `http://localhost:5411/docs`
+
+Οι επικεφαλίδες των αντίστοιχων στηλών να έχουν τα παρακάτω ονόματα.
 
 - Εκπαιδευτές: `surname, name, mail, phone`
 
-- Μαθήματα: `specialty_name, semester, department, team, lesson_name, type_indicator, classroom, weekly_hours, surname, name`
+- Μαθήματα και αναθέσεις: `specialty_name, semester, department, team, lesson_name, type_indicator, classroom, weekly_hours, surname, name`
 
 - Φοιτητές: `amk, surname, name, father_name, mother_name, mail, phone, specialty_name, semester, department, team`
 
