@@ -28,7 +28,9 @@
 `cd saek-attendance` (είσοδος στο φάκελο)
 
 Αντιγράψτε το `.env.example` σε `.env` και συμπληρώστε τα στοιχεία σας.
+
 `cp .env.example .env` (δημιουργία .env από το πρότυπο)
+
 `nano .env` (Επεξεργασία του αρχείου .env)
 
 - αλλάξτε τα credentials (χρησιμοποιήστε ισχυρά passwords)
