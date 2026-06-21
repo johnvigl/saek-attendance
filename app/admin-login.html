@@ -14,7 +14,56 @@
     <button id="loginBtn">Σύνδεση</button>
     <div id="errorMsg" class="error"></div>
 </div>
+
+<!-- Modal ειδοποίησης (αρχικά κρυφό) -->
+<div id="updateModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 450px; text-align: center;">
+        <h3>🆕 Νέα έκδοση διαθέσιμη!</h3>
+        <p id="updateMessage"></p>
+        <p>
+            <a id="updateLink" href="#" target="_blank" class="btn-primary" style="display: inline-block; padding: 10px 20px; text-decoration: none; color: white; border-radius: 40px;">
+                Δείτε τις αλλαγές στο GitHub
+            </a>
+        </p>
+        <button id="closeUpdateModal" class="btn-secondary" style="margin-top: 12px;">Συνέχεια →</button>
+    </div>
+</div>
+
 <script>
+    // Έλεγχος για νέα έκδοση από το GitHub
+    async function checkForUpdate() {
+        try {
+            const res = await fetch('/api/version/check', { credentials: 'include' });
+            if (!res.ok) return false;
+            const data = await res.json();
+            if (data.new_version_available) {
+                document.getElementById('updateMessage').innerHTML = 
+                    `Νέα έκδοση <strong>v${data.latest_version}</strong> είναι διαθέσιμη. (τρέχουσα: v${data.current_version})`;
+                document.getElementById('updateLink').href = data.release_url;
+                return true;   // υπάρχει νέα έκδοση
+            }
+            return false;
+        } catch(e) {
+            console.warn('Version check failed:', e);
+            return false;
+        }
+    }
+
+    // Κλείσιμο modal + redirect στο dashboard
+    document.getElementById('closeUpdateModal').addEventListener('click', function() {
+        document.getElementById('updateModal').style.display = 'none';
+        window.location.href = '/';   // πηγαίνουμε στο dashboard
+    });
+
+    // Κλείσιμο αν πατήσει έξω από το modal (προαιρετικά)
+    document.getElementById('updateModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+            window.location.href = '/';
+        }
+    });
+
+    // Επεξεργασία σύνδεσης
     document.getElementById('loginBtn').onclick = async () => {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
@@ -26,7 +75,15 @@
                 credentials: 'include'
             });
             if (res.ok) {
-                window.location.href = '/';
+                // Έλεγχος για νέα έκδοση
+                const hasUpdate = await checkForUpdate();
+                if (hasUpdate) {
+                    // Εμφάνιση modal – η ανακατεύθυνση θα γίνει μετά το κλείσιμο
+                    document.getElementById('updateModal').style.display = 'flex';
+                } else {
+                    // Χωρίς νέα έκδοση, πάμε κατευθείαν στο dashboard
+                    window.location.href = '/';
+                }
             } else {
                 const err = await res.json();
                 document.getElementById('errorMsg').innerText = err.detail || 'Λάθος στοιχεία';

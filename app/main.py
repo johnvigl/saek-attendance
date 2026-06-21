@@ -20,6 +20,29 @@ import bcrypt
 import hashlib
 import base64
 from collections import defaultdict
+import httpx
+
+GITHUB_REPO = "johnvigl/saek-attendance"
+APP_VERSION = "1.0.0"
+
+async def check_github_version():
+    try:
+        async with httpx.AsyncClient() as client:
+            # Παίρνουμε την τελευταία έκδοση από τα tags
+            resp = await client.get(
+                f"https://api.github.com/repos/{GITHUB_REPO}/tags",
+                timeout=5
+            )
+            if resp.status_code == 200:
+                tags = resp.json()
+                if tags:
+                    latest_tag = tags[0]["name"]
+                    if latest_tag.startswith("v"):
+                        latest_tag = latest_tag[1:]
+                    return latest_tag
+    except Exception as e:
+        print(f"⚠ Failed to check GitHub version: {e}")
+    return None
 
 def prehash_password(password: str) -> str:
     """SHA256 → base64 (44 bytes)"""
@@ -370,6 +393,7 @@ def init_db():
         # --- Δημιουργία αρχικού admin χρήστη ---
         cursor.execute("SELECT id, password FROM users WHERE role = 'admin'")
         row = cursor.fetchone()
+        cursor.fetchall()
         if not row:
             admin_plain = os.getenv("ADMIN_PASSWORD", "admin")
             admin_hash = hash_password(admin_plain)
@@ -521,7 +545,9 @@ def init_db():
 
         # Αν δεν υπάρχει ενεργό εξάμηνο, δημιούργησε ένα προεπιλεγμένο (π.χ. "2026α")
         cursor.execute("SELECT COUNT(*) FROM semesters")
-        if cursor.fetchone()[0] == 0:
+        count_row = cursor.fetchone()
+        cursor.fetchall()
+        if count_row and count_row[0] == 0:
             cursor.execute("INSERT INTO semesters (name, is_active) VALUES ('2026α', TRUE)")
             cursor.execute("SET @default_semester_id = LAST_INSERT_ID()")
             cursor.execute("""
@@ -3008,6 +3034,24 @@ async def admin_login(request: Request, response: Response):
     )
     return resp
 
+# -------------------- VERSION --------------------
+@app.get("/api/version/check")
+async def version_check(current_user = Depends(require_role("admin"))):
+    latest_version = await check_github_version()
+    if latest_version is None:
+        return {
+            "current_version": APP_VERSION,
+            "new_version_available": False,
+            "error": "Could not check GitHub"
+        }
+    
+    is_newer = latest_version != APP_VERSION
+    return {
+        "current_version": APP_VERSION,
+        "latest_version": latest_version,
+        "new_version_available": is_newer,
+        "release_notes": f"https://github.com/{GITHUB_REPO}/releases/tag/v{latest_version}"
+    }
 # -------------------- HEALTH --------------------
 @app.get("/health")
 def health():
