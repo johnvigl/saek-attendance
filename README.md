@@ -63,6 +63,7 @@ ADMIN_DOMAIN=grammateia.saek_example.gr
 
 `chmod +x update.sh`
 
+
 `./update.sh`
 
 ## Ρύθμιση Email (για OTP και αποστολή μαζικών email)
