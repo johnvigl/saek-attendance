@@ -86,7 +86,7 @@ Admin username: `admin`, password `admin` (αλλάξτε τα αμέσως)
 
 - Εκπαιδευτές: `surname, name, mail, phone`
 
-- Μαθήματα: `specialty_name, semester, department, team, lesson_name, type_indicator, classroom, weekly_hours, surname, name`
+- Μαθήματα και αναθέσεις: `specialty_name, semester, department, team, lesson_name, type_indicator, classroom, weekly_hours, surname, name`
 
 - Φοιτητές: `amk, surname, name, father_name, mother_name, mail, phone, specialty_name, semester, department, team`
 
