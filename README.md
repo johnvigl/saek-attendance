@@ -34,7 +34,8 @@
 `nano .env` (Επεξεργασία του αρχείου .env)
 
 - αλλάξτε τα credentials (χρησιμοποιήστε ισχυρά passwords)
-- ορίστε τα domains (για παράδειγμα):
+- ορίστε τα domains (ακολουθεί παράδειγμα):
+
 Yποστηρίζονται 2 ξεχωριστά subdomains για τη διαχείριση και τους εκπαιδευτές/καταρτιζόμενους.
 ```python
 FRONTEND_DOMAIN=apousies.saek_example.gr
@@ -61,6 +62,7 @@ ADMIN_DOMAIN=grammateia.saek_example.gr
 - Για να ενημερώσετε την εφαρμογή στην τελευταία έκδοση, εκτελέστε:
 
 `chmod +x update.sh`
+
 `./update.sh`
 
 ## Ρύθμιση Email (για OTP και αποστολή μαζικών email)
