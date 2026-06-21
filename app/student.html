@@ -4,35 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Οι απουσίες μου - ΣΑΕΚ</title>
-    <style>
-        * { box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
-        body { background: #f1f5f9; margin: 0; padding: 16px; }
-        .container { max-width: 700px; margin: 0 auto; }
-        .card { background: white; border-radius: 24px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        h2 { font-size: 1.5rem; margin: 0 0 1rem 0; color: #0f172a; }
-        label { font-weight: 600; display: block; margin-bottom: 6px; color: #1e293b; }
-        input, select, button { width: 100%; padding: 12px; font-size: 1rem; border: 1px solid #cbd5e1; border-radius: 16px; margin-bottom: 16px; background: white; }
-        button { background-color: #2563eb; color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
-        button:active { background-color: #1d4ed8; }
-        .course-card { background: #f8fafc; border-radius: 20px; padding: 16px; margin-bottom: 16px; }
-        .course-title { font-weight: 700; font-size: 1.2rem; margin-bottom: 8px; }
-        .badge { background: #e2e8f0; padding: 4px 8px; border-radius: 20px; font-size: 0.8rem; display: inline-block; margin-right: 8px; margin-bottom: 8px; }
-        .stat { margin: 12px 0; padding: 8px 0; border-top: 1px solid #cbd5e1; }
-        .details-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 8px; }
-        .details-table th, .details-table td { text-align: left; padding: 8px 4px; border-bottom: 1px solid #e2e8f0; }
-        .loading { text-align: center; color: #2563eb; }
-        .error { background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 20px; margin-top: 16px; }
-        hr { margin: 16px 0; }
-    </style>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
-<body>
+<body class="page-student">
 <div class="container">
     <div class="card">
-        <h2>📖 Πίνακας απουσιών μαθητή</h2>
-        <label>🆓 Αριθμός Μητρώου (AMK) ή ID</label>
-        <input type="text" id="studentIdInput" placeholder="π.χ. 12345 ή ID">
-        <button id="loadBtn">🔍 Εμφάνισε τις απουσίες μου</button>
-
+        <!-- Λογότυπο + τίτλος -->
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1rem;">
+            <img src="/static/logo.png" alt="Λογότυπο" style="height: 36px; width: auto;">
+            <h2 style="margin: 0;">Οι απουσίες μου</h2>
+        </div>
         <div id="result"></div>
     </div>
 </div>
@@ -51,93 +32,67 @@
         return response.json();
     }
 
-    document.getElementById('loadBtn').addEventListener('click', async () => {
-        const input = document.getElementById('studentIdInput').value.trim();
-        if (!input) {
-            alert('Βάλτε τον αριθμό μητρώου (AMK) ή το ID του μαθητή');
-            return;
-        }
-
-        const resultDiv = document.getElementById('result');
-        resultDiv.innerHTML = '<div class="loading">⏳ Φόρτωση...</div>';
-        const loadBtn = document.getElementById('loadBtn');
-        loadBtn.disabled = true;
-
-        try {
-            // Δοκιμάζουμε πρώτα να βρούμε μαθητή με amk, αλλιώς με id
-            let studentId = null;
-            // Αν το input είναι αριθμός, δοκιμάζουμε πρώτα με id, αλλιώς με amk
-            if (/^\d+$/.test(input)) {
-                // Προσπάθεια με id
-                try {
-                    const data = await apiRequest(`/student/${parseInt(input)}/summary`);
-                    studentId = parseInt(input);
-                    renderSummary(data);
-                    return;
-                } catch(e) {
-                    // Αν αποτύχει, ίσως είναι amk
-                }
-            }
-            // Αν δεν δούλεψε με id ή δεν ήταν αριθμός, ψάξε με amk
-            // Πρέπει να βρούμε πρώτα το id μέσω του /students endpoint
-            const studentsData = await apiRequest('/students');
-            const student = studentsData.students.find(s => s.amk === input);
-            if (!student) throw new Error('Δεν βρέθηκε μαθητής με αυτό το AMK ή ID');
-            studentId = student.id;
-            const summary = await apiRequest(`/student/${studentId}/summary`);
-            renderSummary(summary);
-        } catch (err) {
-            resultDiv.innerHTML = `<div class="error">❌ Σφάλμα: ${err.message}</div>`;
-        } finally {
-            loadBtn.disabled = false;
-        }
-    });
-
     function renderSummary(data) {
         const student = data.student;
         const courses = data.courses;
+        let specialtyLine = `${student.specialty_name} ${student.department}`;
+        if (student.teams && student.teams.length > 0) {
+            specialtyLine += ` - ${student.teams[0]}`;
+        }
         let html = `
-            <div class="card">
-                <h2>👤 ${student.surname} ${student.name}</h2>
-                <div><span class="badge">${student.amk}</span>
-                <span class="badge">${student.specialty_name}</span>
-                <span class="badge">${student.semester}</span>
-                <span class="badge">${student.department}</span>
-                ${student.teams.map(t => `<span class="badge">Ομάδα: ${t}</span>`).join('')}</div>
+            <div class="card" style="margin-top:0;">
+                <div style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem;">
+                    👤 ${student.amk} - ${student.surname} ${student.name}
+                </div>
+                <div style="font-size: 1rem; color: #475569; margin-bottom: 1rem;">
+                    ${specialtyLine}
+                </div>
                 <hr>
         `;
         if (courses.length === 0) {
-            html += `<p>Δεν βρέθηκαν μαθήματα για τον μαθητή.</p>`;
+            html += `<p>Δε βρέθηκαν μαθήματα.</p>`;
         } else {
+            html += `
+                <table class="student-summary-table">
+                    <thead>
+                        <tr>
+                            <th class="th-lesson">Μάθημα</th>
+                            <th class="th-vertical col-hours">Σύνολο</th>
+                            <th class="th-vertical col-absences">Απουσίες</th>
+                            <th class="th-vertical col-percent">Ποσοστό</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
             courses.forEach(c => {
+                const color = c.color_class;
+                const perc = Math.round(c.percentage);
                 html += `
-                    <div class="course-card">
-                        <div class="course-title">${c.lesson_name}</div>
-                        <div><span class="badge">${c.type_indicator || ''}</span>
-                        <span class="badge">${c.classroom || 'αίθουσα;'}</span>
-                        <span class="badge">${c.team}</span></div>
-                        <div class="stat">
-                            📚 Σύνολο διδαχθεισών ωρών: <strong>${c.total_teaching_hours}</strong><br>
-                            ⚠️ Συνολικές ώρες απουσιών: <strong>${c.total_absent_hours}</strong>
-                        </div>
-                        ${c.absences_details.length ? `
-                            <div style="font-weight:500;">Λεπτομέρειες απουσιών:</div>
-                            <table class="details-table">
-                                <thead><tr><th>Ημερομηνία</th><th>Ώρες μαθήματος</th><th>Ώρες απουσίας</th></tr></thead>
-                                <tbody>
-                                    ${c.absences_details.map(d => `
-                                        <tr><td>${d.lesson_date}</td><td>${d.lesson_hours}</td><td>${d.hours_absent}</td></tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        ` : `<div class="stat">✅ Δεν υπάρχουν καταγεγραμμένες απουσίες σε αυτό το μάθημα.</div>`}
-                    </div>
+                    <tr>
+                        <td><strong>${c.lesson_name}</strong></td>
+                        <td class="col-hours">${c.total_hours}</td>
+                        <td class="col-absences">${c.total_absences}</td>
+                        <td class="col-percent absence-cell ${color}">${perc}%</td>
+                    </tr>
                 `;
             });
+            html += `
+                    </tbody>
+                </table>
+            `;
         }
         html += `</div>`;
         document.getElementById('result').innerHTML = html;
     }
+
+    (async function load() {
+        try {
+            const data = await apiRequest('/student/me/summary');
+            renderSummary(data);
+        } catch (err) {
+            document.getElementById('result').innerHTML = `<div class="error">❌ Σφάλμα: ${err.message}</div>`;
+        }
+    })();
 </script>
 </body>
 </html>

@@ -36,7 +36,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 otp_request_tracker = {}   # email -> timestamp
 otp_verify_tracker = {}    # email -> timestamp
-OTP_COOLDOWN = 60
+OTP_COOLDOWN = 120
 VERIFY_COOLDOWN = 10
 
 def is_rate_limited(email: str, tracker: dict, cooldown: int) -> bool:
@@ -167,6 +167,20 @@ async def teacher_page(request: Request):
         conn.close()
         if session and session["user_role"] == "instructor":
             return FileResponse("teacher.html")
+    return FileResponse("login.html")
+
+@app.get("/student.html")
+async def student_page(request: Request):
+    token = request.cookies.get("session_token")
+    if token:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT user_role FROM sessions WHERE token = %s AND expires_at > NOW()", (token,))
+        session = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if session and session["user_role"] == "student":
+            return FileResponse("student.html")
     return FileResponse("login.html")
 
 @app.get("/admin-settings.html")
@@ -628,7 +642,7 @@ async def request_otp(request: Request, background_tasks: BackgroundTasks):
 
     if email_exists:
         otp = generate_otp()
-        expires = datetime.utcnow() + timedelta(minutes=5)
+        expires = datetime.now() + timedelta(minutes=5)
         cursor.execute("""
             INSERT INTO otp_codes (email, code, expires_at, used)
             VALUES (%s, %s, %s, FALSE)
@@ -704,7 +718,7 @@ async def verify_otp(request: Request, response: Response):
     else:
         raise HTTPException(404, "User not found")
     token = generate_session_token()
-    expires = datetime.utcnow() + timedelta(days=7)
+    expires = datetime.now() + timedelta(days=30)
     cursor.execute("""
         INSERT INTO sessions (token, user_id, user_role, expires_at)
         VALUES (%s, %s, %s, %s)
@@ -715,7 +729,7 @@ async def verify_otp(request: Request, response: Response):
     otp_verify_tracker[email] = time.time()
     resp = JSONResponse(content={"message": "Login successful", "role": user_role})
     cookie_settings = get_cookie_settings(request)
-    rest.set_cookie(key="session_token", value=token, httponly=True, secure=cookie_settings["secure"], samesite="lax", domain=cookie_settings["domain"],max_age=7*24*3600)
+    resp.set_cookie(key="session_token", value=token, httponly=True, secure=cookie_settings["secure"], samesite="lax", domain=cookie_settings["domain"],max_age=7*24*3600)
     return resp
 
 @app.post("/auth/logout")
@@ -2632,6 +2646,126 @@ async def get_lessons_for_course(course_unit_id: int, current_user = Depends(req
         cursor.close()
         conn.close()
 
+@app.get("/student/me/summary")
+async def get_my_absences_summary(current_user = Depends(get_current_user)):
+    if current_user["user_role"] != "student":
+        raise HTTPException(403, "Access denied")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        semester_id = get_active_semester_id()
+        if semester_id is None:
+            raise HTTPException(400, "No active semester configured")
+        
+        # 1. Βρες το email του χρήστη
+        cursor.execute("SELECT username FROM users WHERE id = %s", (current_user["user_id"],))
+        user_row = cursor.fetchone()
+        if not user_row:
+            raise HTTPException(404, "User not found")
+        email = user_row["username"]
+        
+        # 2. Βρες τον φοιτητή
+        cursor.execute("""
+            SELECT id, amk, surname, name, specialty_name, semester, department
+            FROM students
+            WHERE mail = %s AND semester_id = %s
+        """, (email, semester_id))
+        student = cursor.fetchone()
+        if not student:
+            raise HTTPException(404, "Student profile not found")
+        
+        # 3. Ομάδες του φοιτητή
+        cursor.execute("SELECT team FROM student_teams WHERE student_id = %s", (student["id"],))
+        teams = [row["team"] for row in cursor.fetchall()]
+        student["teams"] = teams
+
+        # 4. Βρες όλα τα course_units που αντιστοιχούν στον φοιτητή (σωστό φιλτράρισμα ομάδων)
+        team_conditions = ["(team = '' OR team IS NULL)"]
+        params = [student["specialty_name"], student["semester"], student["department"], semester_id]
+
+        if teams:
+            placeholders = ','.join(['%s'] * len(student["teams"]))
+            team_conditions.append(f"team IN ({placeholders})")
+            params.extend(student["teams"])
+
+        team_filter = " OR ".join(team_conditions)
+
+        query = f"""
+            SELECT id, lesson_name, weekly_hours, type_indicator
+            FROM course_units
+            WHERE specialty_name = %s AND semester = %s AND department = %s
+              AND semester_id = %s
+              AND ({team_filter})
+        """
+
+        cursor.execute(query, params)
+        course_units = cursor.fetchall()
+        
+        # 5. Ομαδοποίηση ανά lesson_name
+        course_map = {}
+        for cu in course_units:
+            name = cu["lesson_name"]
+            if name not in course_map:
+                course_map[name] = {
+                    "total_weekly_hours": 0,
+                    "total_absences": 0,
+                    "details": []
+                }
+            course_map[name]["total_weekly_hours"] += cu["weekly_hours"]
+            
+            # Υπολογισμός απουσιών για αυτό το course_unit
+            cursor.execute("""
+                SELECT COALESCE(SUM(a.hours_absent), 0) AS absent
+                FROM absences a
+                JOIN lessons l ON a.lesson_id = l.id
+                WHERE l.course_unit_id = %s AND a.student_id = %s
+            """, (cu["id"], student["id"]))
+            abs_row = cursor.fetchone()
+            course_map[name]["total_absences"] += abs_row["absent"]
+            
+            # Λεπτομέρειες για τον πίνακα (προαιρετικά)
+            cursor.execute("""
+                SELECT l.lesson_date, l.hours AS lesson_hours, a.hours_absent
+                FROM absences a
+                JOIN lessons l ON a.lesson_id = l.id
+                WHERE l.course_unit_id = %s AND a.student_id = %s
+                ORDER BY l.lesson_date DESC
+            """, (cu["id"], student["id"]))
+            details = cursor.fetchall()
+            course_map[name]["details"].extend(details)
+        
+        # 6. Δημιουργία αποτελέσματος
+        result_courses = []
+        for name, data in course_map.items():
+            total_hours = data["total_weekly_hours"] * 15
+            total_absences = data["total_absences"]
+            percentage = (total_absences / total_hours * 100) if total_hours > 0 else 0
+            
+            # Χρωματισμός
+            color_class = ""
+            if percentage >= 30:
+                color_class = "danger"
+            elif percentage >= 20:
+                color_class = "warning"
+            
+            result_courses.append({
+                "lesson_name": name,
+                "total_hours": total_hours,
+                "total_absences": total_absences,
+                "percentage": round(percentage, 2),
+                "color_class": color_class,
+                "details": data["details"]
+            })
+        
+        return {
+            "student": student,
+            "courses": result_courses
+        }
+    finally:
+        cursor.close()
+        conn.close()
+
 @app.get("/course-units/{course_unit_id}/student-absences")
 async def get_student_absences(course_unit_id: int, current_user = Depends(get_current_user)):
     if current_user["user_role"] not in ("admin", "instructor"):
@@ -2848,7 +2982,7 @@ async def admin_login(request: Request, response: Response):
 
     # Δημιουργία session token
     token = secrets.token_urlsafe(32)
-    expires = datetime.utcnow() + timedelta(days=7)
+    expires = datetime.now() + timedelta(days=30)
 
     conn3 = get_db_connection()
     cursor3 = conn3.cursor()
