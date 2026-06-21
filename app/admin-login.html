@@ -30,17 +30,25 @@
 </div>
 
 <script>
-    // Έλεγχος για νέα έκδοση από το GitHub
+    // Έλεγχος για νέα έκδοση
     async function checkForUpdate() {
         try {
             const res = await fetch('/api/version/check', { credentials: 'include' });
-            if (!res.ok) return false;
+            if (!res.ok) {
+                console.warn('Version check returned status:', res.status);
+                return false;
+            }
             const data = await res.json();
+            console.log('Version check response:', data);
             if (data.new_version_available) {
                 document.getElementById('updateMessage').innerHTML = 
                     `Νέα έκδοση <strong>v${data.latest_version}</strong> είναι διαθέσιμη. (τρέχουσα: v${data.current_version})`;
-                document.getElementById('updateLink').href = data.release_url;
-                return true;   // υπάρχει νέα έκδοση
+                
+                // Αν το release_url λείπει, φτιάξ' το μόνος σου
+                const releaseUrl = data.release_url || 
+                    `https://github.com/johnvigl/saek-attendance/releases/tag/v${data.latest_version}`;
+                document.getElementById('updateLink').href = releaseUrl;
+                return true;
             }
             return false;
         } catch(e) {
@@ -49,21 +57,26 @@
         }
     }
 
-    // Κλείσιμο modal + redirect στο dashboard
+    // Redirect στο dashboard (απευθείας στο HTML, όχι στο /)
+    function goToDashboard() {
+        window.location.href = '/admin-dashboard.html';
+    }
+
+    // Κλείσιμο modal + redirect
     document.getElementById('closeUpdateModal').addEventListener('click', function() {
         document.getElementById('updateModal').style.display = 'none';
-        window.location.href = '/';   // πηγαίνουμε στο dashboard
+        goToDashboard();
     });
 
-    // Κλείσιμο αν πατήσει έξω από το modal (προαιρετικά)
+    // Κλείσιμο αν πατήσει έξω
     document.getElementById('updateModal').addEventListener('click', function(e) {
         if (e.target === this) {
             this.style.display = 'none';
-            window.location.href = '/';
+            goToDashboard();
         }
     });
 
-    // Επεξεργασία σύνδεσης
+    // Login
     document.getElementById('loginBtn').onclick = async () => {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
@@ -75,20 +88,20 @@
                 credentials: 'include'
             });
             if (res.ok) {
-                // Έλεγχος για νέα έκδοση
                 const hasUpdate = await checkForUpdate();
                 if (hasUpdate) {
-                    // Εμφάνιση modal – η ανακατεύθυνση θα γίνει μετά το κλείσιμο
                     document.getElementById('updateModal').style.display = 'flex';
                 } else {
-                    // Χωρίς νέα έκδοση, πάμε κατευθείαν στο dashboard
-                    window.location.href = '/';
+                    goToDashboard();
                 }
             } else {
                 const err = await res.json();
                 document.getElementById('errorMsg').innerText = err.detail || 'Λάθος στοιχεία';
             }
-        } catch(e) { console.error(e); }
+        } catch(e) {
+            console.error(e);
+            document.getElementById('errorMsg').innerText = 'Σφάλμα σύνδεσης';
+        }
     };
 </script>
 </body>
