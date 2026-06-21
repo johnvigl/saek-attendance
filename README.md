@@ -50,12 +50,15 @@ ADMIN_DOMAIN=grammateia.saek_example.gr
 `docker-compose up -d`
 
 4. Πρόσβαση
-    Εκπαιδευτές/Φοιτητές: http://localhost:5411 ή apousies.saek_example.gr
-    Γραμματεία/Admin: http://localhost:5411 ή grammateia.saek_example.gr
 
-5. Αρχική σύνδεση
-    Admin username: `admin`, password `admin` (αλλάξτε τα αμέσως)
-    Εκπαιδευτές/Καταρτιζόμενοι: Σύνδεση με email + OTP (απαιτεί ρύθμιση λογαριασμού email αποστολής)
+Εκπαιδευτές/Φοιτητές: http://localhost:5411 ή apousies.saek_example.gr
+
+Γραμματεία/Admin: http://localhost:5411 ή grammateia.saek_example.gr
+
+6. Αρχική σύνδεση
+Admin username: `admin`, password `admin` (αλλάξτε τα αμέσως)
+   
+Εκπαιδευτές/Καταρτιζόμενοι: Σύνδεση με email + OTP (απαιτεί ρύθμιση λογαριασμού email αποστολής)
 
 ## Ενημερώσεις
 - Σε περίπτωση σημαντικής ενημέρωσης θα λαμβάνετε ειδοποίηση εντός της εφαρμογής.
