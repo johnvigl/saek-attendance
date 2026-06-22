@@ -533,6 +533,18 @@ body.page-student .student-summary-table .col-percent {
     font-weight: 600;
 }
 
+/* Κάθετο κείμενο μόνο στις επικεφαλίδες των στηλών Σύνολο, Απουσίες, Ποσοστό */
+body.page-student .student-summary-table thead th.col-hours,
+body.page-student .student-summary-table thead th.col-absences,
+body.page-student .student-summary-table thead th.col-percent {
+    transform: rotate(270deg);
+    white-space: nowrap;
+    padding: 8px 0;
+    vertical-align: middle;
+    text-align: center;
+    height: 80px;
+    width: 30px;
+}
 /* Χρώματα για τα ποσοστά απουσιών (βάσει JavaScript) */
 body.page-student .absence-cell.warning {
     background-color: #fef08a !important; /* κίτρινο */
