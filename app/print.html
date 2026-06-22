@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Εκτυπώσεις - Απουσιολόγιο & Βιβλίο Ύλης</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="page-print">
+
+<div id="controls">
+    <label for="departmentSelect">Τμήμα:</label>
+    <select id="departmentSelect">
+        <option value="">-- Φόρτωση τμημάτων --</option>
+    </select>
+    <button id="printBtn" class="print-btn">🖨️ Εκτύπωση</button>
+</div>
+
+<div id="printContent"></div>
+
+<script>
+    async function api(url, options={}) {
+        const res = await fetch(url, {
+            credentials: 'include',
+            ...options,
+            headers: { 'Content-Type': 'application/json', ...options.headers }
+        });
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
+    }
+
+    // ---- Φόρτωση τμημάτων ----
+    async function loadDepartments() {
+        try {
+            const data = await api('/admin/print/departments');
+            const select = document.getElementById('departmentSelect');
+            select.innerHTML = '<option value="">-- Επίλεξε τμήμα --</option>';
+            data.departments.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = JSON.stringify({ 
+                    specialty_name: d.specialty_name, 
+                    semester: d.semester, 
+                    department: d.department,
+                    semester_name: d.semester_name
+                });
+                opt.textContent = d.display;
+                select.appendChild(opt);
+            });
+            if (select.value) loadPrintData();
+        } catch(err) {
+            alert('Σφάλμα φόρτωσης τμημάτων: ' + err.message);
+        }
+    }
+
+    // ---- Φόρτωση όλων των δεδομένων ----
+    async function loadPrintData() {
+        const select = document.getElementById('departmentSelect');
+        const val = select.value;
+        if (!val) {
+            document.getElementById('printContent').innerHTML = '<p style="text-align:center;padding:40px;">Παρακαλώ επιλέξτε τμήμα.</p>';
+            return;
+        }
+        const params = JSON.parse(val);
+        try {
+            // Φόρτωση απουσιολογίων
+            const absData = await api(`/admin/print/groups?specialty_name=${encodeURIComponent(params.specialty_name)}&semester=${encodeURIComponent(params.semester)}&department=${encodeURIComponent(params.department)}`);
+            // Φόρτωση βιβλίων ύλης
+            const sylData = await api(`/admin/print/syllabus?specialty_name=${encodeURIComponent(params.specialty_name)}&semester=${encodeURIComponent(params.semester)}&department=${encodeURIComponent(params.department)}`);
+            
+            renderAll(params.semester_name, absData.groups, sylData.groups);
+        } catch(err) {
+            alert('Σφάλμα φόρτωσης δεδομένων: ' + err.message);
+        }
+    }
+
+    // ---- Κύρια συνάρτηση εμφάνισης ----
+    async function renderAll(semesterName, absGroups, sylGroups) {
+        const container = document.getElementById('printContent');
+        container.innerHTML = '';
+
+        let unitName = 'ΣΑΕΚ';
+        try {
+            const settings = await api('/admin/settings');
+            unitName = settings.unit_name || 'ΣΑΕΚ';
+        } catch(e) {}
+
+        // 1. ΑΠΟΥΣΙΟΛΟΓΙΑ
+        if (absGroups && absGroups.length > 0) {
+            absGroups.forEach(group => {
+                const page = createAbsencePage(unitName, semesterName, group);
+                container.appendChild(page);
+            });
+        }
+
+        // 2. ΒΙΒΛΙΑ ΥΛΗΣ
+        if (sylGroups && sylGroups.length > 0) {
+            // Τίτλος διαχωρισμού
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'syllabus-title';
+            titleDiv.textContent = 'ΒΙΒΛΙΟ ΥΛΗΣ';
+            container.appendChild(titleDiv);
+
+            sylGroups.forEach(group => {
+                const page = createSyllabusPage(unitName, semesterName, group);
+                container.appendChild(page);
+            });
+        }
+
+        if ((!absGroups || absGroups.length === 0) && (!sylGroups || sylGroups.length === 0)) {
+            container.innerHTML = '<p style="text-align:center;padding:40px;">Δεν βρέθηκαν δεδομένα για αυτό το τμήμα.</p>';
+        }
+    }
+
+    // ---- Δημιουργία σελίδας απουσιολογίου ----
+    function createAbsencePage(unitName, semesterName, group) {
+        const page = document.createElement('div');
+        page.className = 'page';
+
+        // Header
+        const header = createHeader(unitName, semesterName, group);
+        page.appendChild(header);
+
+        // Πίνακας
+        const tableWrap = document.createElement('div');
+        tableWrap.className = 'table-wrap';
+        const table = document.createElement('table');
+        table.className = 'absences-table';
+
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        const thAmk = document.createElement('th');
+        thAmk.textContent = 'ΑΜΚ';
+        headerRow.appendChild(thAmk);
+        const thName = document.createElement('th');
+        thName.textContent = 'Ονοματεπώνυμο';
+        thName.style.textAlign = 'left';
+        headerRow.appendChild(thName);
+
+        const dates = group.lesson_dates || [];
+        dates.forEach(dateStr => {
+            const th = document.createElement('th');
+            th.className = 'date-header';
+            const dateObj = new Date(dateStr);
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const month = String(dateObj.getMonth()+1).padStart(2, '0');
+            const year = dateObj.getFullYear();
+            const hours = group.lesson_hours && group.lesson_hours[dateStr] ? group.lesson_hours[dateStr] : '';
+            const wrap = document.createElement('div');
+            wrap.className = 'date-header-wrap';
+            const hoursSpan = document.createElement('div');
+            hoursSpan.className = 'date-hours';
+            hoursSpan.textContent = `${hours} ώρες`;
+            wrap.appendChild(hoursSpan);
+            const dateSpan = document.createElement('div');
+            dateSpan.className = 'date-value';
+            dateSpan.textContent = `${day}/${month}/${year}`;
+            wrap.appendChild(dateSpan);
+            th.appendChild(wrap);
+            headerRow.appendChild(th);
+        });
+
+        const thTotal = document.createElement('th');
+        thTotal.textContent = 'ΣΥΝΟΛΟ';
+        thTotal.className = 'total-col';
+        headerRow.appendChild(thTotal);
+
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        group.students.forEach(student => {
+            const tr = document.createElement('tr');
+            const tdAmk = document.createElement('td');
+            tdAmk.className = 'student-amk';
+            tdAmk.textContent = student.amk;
+            tr.appendChild(tdAmk);
+            const tdName = document.createElement('td');
+            tdName.className = 'student-name';
+            tdName.textContent = `${student.surname} ${student.name}`;
+            tr.appendChild(tdName);
+
+            let totalAbsences = 0;
+            dates.forEach(dateStr => {
+                const td = document.createElement('td');
+                const abs = student.absences && student.absences[dateStr] ? student.absences[dateStr] : null;
+                if (abs !== null && abs > 0) {
+                    td.textContent = abs;
+                    td.className = 'absent-cell has-absence';
+                    totalAbsences += abs;
+                } else {
+                    td.textContent = '';
+                    td.className = 'absent-cell';
+                }
+                tr.appendChild(td);
+            });
+
+            const tdTotal = document.createElement('td');
+            tdTotal.textContent = totalAbsences;
+            tdTotal.className = 'total-col';
+            tr.appendChild(tdTotal);
+            tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        tableWrap.appendChild(table);
+        page.appendChild(tableWrap);
+
+        // Footer
+        const footer = createFooter(group.teachers || []);
+        page.appendChild(footer);
+
+        return page;
+    }
+
+    // ---- Δημιουργία σελίδας βιβλίου ύλης ----
+    function createSyllabusPage(unitName, semesterName, group) {
+        const page = document.createElement('div');
+        page.className = 'page page-syllabus';
+
+        // Header
+        const header = createHeader(unitName, semesterName, group);
+        page.appendChild(header);
+
+        // Πίνακας βιβλίου ύλης
+        const tableWrap = document.createElement('div');
+        tableWrap.className = 'table-wrap';
+        const table = document.createElement('table');
+        table.className = 'syllabus-table';
+
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        const thDate = document.createElement('th');
+        thDate.textContent = 'Ημερομηνία';
+        thDate.className = 'col-date';
+        headerRow.appendChild(thDate);
+        const thHours = document.createElement('th');
+        thHours.textContent = 'Ώρες';
+        thHours.className = 'col-hours';
+        headerRow.appendChild(thHours);
+        const thSyllabus = document.createElement('th');
+        thSyllabus.textContent = 'Ύλη / Σημειώσεις';
+        thSyllabus.className = 'col-syllabus';
+        headerRow.appendChild(thSyllabus);
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        const lessons = group.lessons || [];
+        if (lessons.length === 0) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 3;
+            td.textContent = 'Δεν υπάρχουν καταχωρημένες διδασκαλίες.';
+            td.style.textAlign = 'center';
+            td.style.fontStyle = 'italic';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+        } else {
+            lessons.forEach(lesson => {
+                const tr = document.createElement('tr');
+                const tdDate = document.createElement('td');
+                tdDate.className = 'col-date';
+                const dateObj = new Date(lesson.lesson_date);
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const month = String(dateObj.getMonth()+1).padStart(2, '0');
+                const year = dateObj.getFullYear();
+                tdDate.textContent = `${day}/${month}/${year}`;
+                tr.appendChild(tdDate);
+
+                const tdHours = document.createElement('td');
+                tdHours.className = 'col-hours';
+                tdHours.textContent = `${lesson.hours} ώρες`;
+                tr.appendChild(tdHours);
+
+                const tdSyllabus = document.createElement('td');
+                tdSyllabus.className = 'col-syllabus';
+                const syllabusSpan = document.createElement('span');
+                syllabusSpan.className = 'syllabus-text';
+                syllabusSpan.textContent = lesson.syllabus || '(δεν έχει καταχωρηθεί ύλη)';
+                tdSyllabus.appendChild(syllabusSpan);
+                tr.appendChild(tdSyllabus);
+
+                tbody.appendChild(tr);
+            });
+        }
+        table.appendChild(tbody);
+        tableWrap.appendChild(table);
+        page.appendChild(tableWrap);
+
+        // Footer (ίδιο με τα απουσιολόγια)
+        const footer = createFooter(group.teachers || []);
+        page.appendChild(footer);
+
+        return page;
+    }
+
+    // ---- Δημιουργία header (κοινό) ----
+    function createHeader(unitName, semesterName, group) {
+        const header = document.createElement('div');
+        header.className = 'page-header';
+
+        const topRow = document.createElement('div');
+        topRow.className = 'header-top';
+        const unitSpan = document.createElement('span');
+        unitSpan.className = 'unit-name';
+        unitSpan.textContent = unitName;
+        topRow.appendChild(unitSpan);
+        const semSpan = document.createElement('span');
+        semSpan.className = 'semester';
+        semSpan.textContent = `– ${semesterName}`;
+        topRow.appendChild(semSpan);
+        header.appendChild(topRow);
+
+        const bottomRow = document.createElement('div');
+        bottomRow.className = 'header-bottom';
+        const leftDiv = document.createElement('div');
+        leftDiv.className = 'left';
+        const logoImg = document.createElement('img');
+        logoImg.src = '/static/logo.png';
+        logoImg.className = 'logo';
+        logoImg.alt = 'Λογότυπο';
+        logoImg.onerror = function() { this.style.display = 'none'; };
+        leftDiv.appendChild(logoImg);
+        bottomRow.appendChild(leftDiv);
+
+        const rightDiv = document.createElement('div');
+        rightDiv.className = 'right';
+        const specialtyFull = group.specialty_dept || '';
+        let lessonPart = group.lesson_name || '';
+        if (group.type_indicator) {
+            lessonPart += ` (${group.type_indicator})`;
+        }
+        if (group.team) {
+            const teamClean = group.team.replace(/^Ομάδα\s*/i, '');
+            lessonPart += ` Ομάδα ${teamClean}`;
+        }
+        rightDiv.innerHTML = `
+            <div class="specialty">${specialtyFull}</div>
+            <div class="sub">${lessonPart}</div>
+        `;
+        bottomRow.appendChild(rightDiv);
+        header.appendChild(bottomRow);
+
+        return header;
+    }
+
+    // ---- Δημιουργία footer με εκπαιδευτές ----
+    function createFooter(teachers) {
+        const footer = document.createElement('div');
+        footer.className = 'footer-teachers';
+
+        const teachersRow = document.createElement('div');
+        teachersRow.className = 'teachers-row';
+
+        let sorted = [...teachers].sort((a, b) => a.localeCompare(b));
+
+        if (sorted.length > 0) {
+            sorted.forEach(name => {
+                const item = document.createElement('div');
+                item.className = 'teacher-item';
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'teacher-name';
+                nameSpan.textContent = name;
+                item.appendChild(nameSpan);
+                teachersRow.appendChild(item);
+            });
+        } else {
+            const span = document.createElement('span');
+            span.textContent = '(δεν έχει οριστεί εκπαιδευτής)';
+            teachersRow.appendChild(span);
+        }
+
+        footer.appendChild(teachersRow);
+        return footer;
+    }
+
+    // ---- Events ----
+    document.getElementById('departmentSelect').addEventListener('change', loadPrintData);
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+    loadDepartments();
+</script>
+</body>
+</html>

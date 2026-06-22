@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Σύνδεση Διαχειριστή</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="page-admin-login">
+<div class="card">
+    <h2>Σύνδεση Διαχειριστή</h2>
+    <input type="email" id="email" placeholder="admin" value="admin">
+    <input type="password" id="password" placeholder="admin">
+    <button id="loginBtn">Σύνδεση</button>
+    <div id="errorMsg" class="error"></div>
+</div>
+
+<!-- Modal ειδοποίησης (αρχικά κρυφό) -->
+<div id="updateModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 450px; text-align: center;">
+        <h3>🆕 Νέα έκδοση διαθέσιμη!</h3>
+        <p id="updateMessage"></p>
+        <p>
+            <a id="updateLink" href="#" target="_blank" class="btn-primary" style="display: inline-block; padding: 10px 20px; text-decoration: none; color: white; border-radius: 40px;">
+                Δείτε τις αλλαγές στο GitHub
+            </a>
+        </p>
+        <button id="closeUpdateModal" class="btn-secondary" style="margin-top: 12px;">Συνέχεια →</button>
+    </div>
+</div>
+
+<script>
+    // Έλεγχος για νέα έκδοση
+    async function checkForUpdate() {
+        try {
+            const res = await fetch('/api/version/check', { credentials: 'include' });
+            if (!res.ok) {
+                console.warn('Version check returned status:', res.status);
+                return false;
+            }
+            const data = await res.json();
+            console.log('Version check response:', data);
+            if (data.new_version_available) {
+                document.getElementById('updateMessage').innerHTML = 
+                    `Νέα έκδοση <strong>v${data.latest_version}</strong> είναι διαθέσιμη. (τρέχουσα: v${data.current_version})`;
+                
+                // Αν το release_url λείπει, φτιάξ' το μόνος σου
+                const releaseUrl = data.release_url || 
+                    `https://github.com/johnvigl/saek-attendance/releases/tag/v${data.latest_version}`;
+                document.getElementById('updateLink').href = releaseUrl;
+                return true;
+            }
+            return false;
+        } catch(e) {
+            console.warn('Version check failed:', e);
+            return false;
+        }
+    }
+
+    // Redirect στο dashboard (απευθείας στο HTML, όχι στο /)
+    function goToDashboard() {
+        window.location.href = '/admin-dashboard.html';
+    }
+
+    // Κλείσιμο modal + redirect
+    document.getElementById('closeUpdateModal').addEventListener('click', function() {
+        document.getElementById('updateModal').style.display = 'none';
+        goToDashboard();
+    });
+
+    // Κλείσιμο αν πατήσει έξω
+    document.getElementById('updateModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+            goToDashboard();
+        }
+    });
+
+    // Login
+    document.getElementById('loginBtn').onclick = async () => {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        try {
+            const res = await fetch('/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+                credentials: 'include'
+            });
+            if (res.ok) {
+                const hasUpdate = await checkForUpdate();
+                if (hasUpdate) {
+                    document.getElementById('updateModal').style.display = 'flex';
+                } else {
+                    goToDashboard();
+                }
+            } else {
+                const err = await res.json();
+                document.getElementById('errorMsg').innerText = err.detail || 'Λάθος στοιχεία';
+            }
+        } catch(e) {
+            console.error(e);
+            document.getElementById('errorMsg').innerText = 'Σφάλμα σύνδεσης';
+        }
+    };
+
+    // Enter key support
+    document.getElementById('password').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('loginBtn').click();
+        }
+    });
+</script>
+</body>
+</html>
