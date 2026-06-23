@@ -2376,23 +2376,35 @@ async def send_bulk_email(data: dict, current_user = Depends(require_role("admin
     # Συνδυασμός CC
     all_cc = list(set(default_cc + cc_from_frontend))
 
-    msg = MIMEText(message)
-    msg['Subject'] = subject
-    msg['From'] = sender["email"]
-    msg['To'] = to_recipient
-    if all_cc:
-        msg['Cc'] = ", ".join(all_cc)
-    msg['Bcc'] = ", ".join(recipients)
+    # Χωρισμός παραληπτών σε ομάδες των 100
+    batch_size = 100
+    total_recipients = len(recipients)
+    sent_count = 0
 
-    try:
-        with smtplib.SMTP(sender["smtp_host"], sender["smtp_port"]) as server:
-            server.starttls()
-            server.login(sender["username"], sender["password"])
-            server.send_message(msg)
-        return {"message": f"Email στάλθηκε σε {len(recipients)} BCC παραλήπτες" + (f" και CC σε {len(all_cc)}" if all_cc else "")}
-    except Exception as e:
-        print(f"Email error: {e}")
-        raise HTTPException(500, f"Αποτυχία αποστολής email: {str(e)}")
+    for i in range(0, total_recipients, batch_size):
+        batch = recipients[i:i+batch_size]
+        msg = MIMEText(message)
+        msg['Subject'] = subject
+        msg['From'] = sender["email"]
+        msg['To'] = to_recipient
+        if all_cc:
+            msg['Cc'] = ", ".join(all_cc)
+        msg['Bcc'] = ", ".join(batch)
+
+        try:
+            with smtplib.SMTP(sender["smtp_host"], sender["smtp_port"]) as server:
+                server.starttls()
+                server.login(sender["username"], sender["password"])
+                server.send_message(msg)
+            sent_count += len(batch)
+        except Exception as e:
+            print(f"Email error on batch {i//batch_size + 1}: {e}")
+            # Συνεχίζουμε με τα επόμενα batches
+
+    if sent_count == 0:
+        raise HTTPException(500, "Αποτυχία αποστολής όλων των email")
+
+    return {"message": f"Email στάλθηκε σε {sent_count} BCC παραλήπτες" + (f" και CC σε {len(all_cc)}" if all_cc else "")}
 
 @app.put("/admin/settings/cc-recipients")
 async def admin_update_cc_recipients(data: dict, current_user = Depends(require_role("admin"))):
