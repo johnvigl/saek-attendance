@@ -2376,8 +2376,8 @@ async def send_bulk_email(data: dict, current_user = Depends(require_role("admin
     # Συνδυασμός CC
     all_cc = list(set(default_cc + cc_from_frontend))
 
-    # Χωρισμός παραληπτών σε ομάδες των 100
-    batch_size = 100
+    # Χωρισμός παραληπτών σε ομάδες των 90
+    batch_size = 90
     total_recipients = len(recipients)
     sent_count = 0
 
