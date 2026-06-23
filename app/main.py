@@ -21,9 +21,15 @@ import hashlib
 import base64
 from collections import defaultdict
 import httpx
+from cryptography.fernet import Fernet
 
 GITHUB_REPO = "johnvigl/saek-attendance"
 APP_VERSION = "1.0.0"
+
+ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
+if not ENCRYPTION_KEY:
+    raise ValueError("ENCRYPTION_KEY environment variable is required")
+cipher = Fernet(ENCRYPTION_KEY.encode())
 
 async def check_github_version():
     try:
@@ -56,6 +62,13 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     pre = prehash_password(plain_password).encode('utf-8')
     return bcrypt.checkpw(pre, hashed_password.encode('utf-8'))
+
+def encrypt_password(password: str) -> str:
+    return cipher.encrypt(password.encode()).decode()
+
+def decrypt_password(encrypted: str) -> str:
+    return cipher.decrypt(encrypted.encode()).decode()
+
 
 otp_request_tracker = {}   # email -> timestamp
 otp_verify_tracker = {}    # email -> timestamp
@@ -606,7 +619,7 @@ async def send_otp_email(to_email: str, otp_code: str) -> bool:
         smtp_host = sender["smtp_host"]
         smtp_port = sender["smtp_port"]
         smtp_user = sender["username"]
-        smtp_pass = sender["password"]
+        smtp_pass = decrypt_password(sender["password"])
 
         msg = MIMEText(f"Ο κωδικός σας για την εφαρμογή απουσιών είναι: {otp_code}\nΙσχύει για 5 λεπτά.")
         msg['Subject'] = subject
@@ -2018,10 +2031,11 @@ async def admin_add_sender(data: dict, current_user = Depends(require_role("admi
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
+        encrypted_password = encrypt_password(password)
         cursor.execute("""
             INSERT INTO email_senders (name, email, smtp_host, smtp_port, username, password)
             VALUES (%s, %s, %s, %s, %s, %s)
-        """, (name, email, smtp_host, smtp_port, username, password))
+        """, (name, email, smtp_host, smtp_port, username, encrypted_password))
         conn.commit()
         return {"message": "Sender added", "id": cursor.lastrowid}
     except mysql.connector.IntegrityError:
@@ -2071,7 +2085,7 @@ async def admin_update_sender(sender_id: int, data: dict, current_user = Depends
         if username:
             updates.append("username = %s"); values.append(username)
         if password:
-            updates.append("password = %s"); values.append(password)
+            updates.append("password = %s"); values.append(encrypt_password(password))
         if is_active is not None:
             updates.append("is_active = %s"); values.append(is_active)
         values.append(sender_id)
@@ -2394,11 +2408,13 @@ async def send_bulk_email(data: dict, current_user = Depends(require_role("admin
         try:
             with smtplib.SMTP(sender["smtp_host"], sender["smtp_port"]) as server:
                 server.starttls()
-                server.login(sender["username"], sender["password"])
+                server.login(sender["username"], decrypt_password(sender["password"]))
                 server.send_message(msg)
             sent_count += len(batch)
         except Exception as e:
-            print(f"Email error on batch {i//batch_size + 1}: {e}")
+            import traceback
+            print(f"Email error on batch {i//batch_size + 1}:")
+            traceback.print_exc()
             # Συνεχίζουμε με τα επόμενα batches
 
     if sent_count == 0:
