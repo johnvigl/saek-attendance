@@ -474,6 +474,7 @@
         else if (currentTab === 'students') await loadAllStudents();
         else if (currentTab === 'courses') await loadAllCourses();
         else if (currentTab === 'assignments') await loadAllAssignments();
+        else if (currentTab === 'absences') await loadAbsences(document.getElementById('absencesSpecialtySelect').value);
     }
 
     function matchesFilter(value, filter) { if (!filter) return true; const orParts = filter.split('|').map(s => s.trim()).filter(s => s); if (orParts.length > 1) { return orParts.some(part => matchesFilter(value, part)); } const andParts = filter.split('&').map(s => s.trim()).filter(s => s); if (andParts.length > 1) { return andParts.every(part => (value || '').toLowerCase().includes(part.toLowerCase())); } return (value || '').toLowerCase().includes(filter.toLowerCase()); }
