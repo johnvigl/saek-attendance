@@ -13,6 +13,14 @@
     <select id="departmentSelect">
         <option value="">-- Φόρτωση τμημάτων --</option>
     </select>
+
+    <label for="reportType">Τύπος αναφοράς:</label>
+    <select id="reportType">
+        <option value="absences">Απουσιολόγιο</option>
+        <option value="syllabus">Βιβλίο Ύλης</option>
+        <option value="both">Και τα δύο</option>
+    </select>
+
     <button id="printBtn" class="print-btn">🖨️ Εκτύπωση</button>
 </div>
 
@@ -52,7 +60,7 @@
         }
     }
 
-    // ---- Φόρτωση όλων των δεδομένων ----
+    // ---- Φόρτωση δεδομένων βάσει επιλογής ----
     async function loadPrintData() {
         const select = document.getElementById('departmentSelect');
         const val = select.value;
@@ -61,20 +69,7 @@
             return;
         }
         const params = JSON.parse(val);
-        try {
-            // Φόρτωση απουσιολογίων
-            const absData = await api(`/admin/print/groups?specialty_name=${encodeURIComponent(params.specialty_name)}&semester=${encodeURIComponent(params.semester)}&department=${encodeURIComponent(params.department)}`);
-            // Φόρτωση βιβλίων ύλης
-            const sylData = await api(`/admin/print/syllabus?specialty_name=${encodeURIComponent(params.specialty_name)}&semester=${encodeURIComponent(params.semester)}&department=${encodeURIComponent(params.department)}`);
-            
-            renderAll(params.semester_name, absData.groups, sylData.groups);
-        } catch(err) {
-            alert('Σφάλμα φόρτωσης δεδομένων: ' + err.message);
-        }
-    }
-
-    // ---- Κύρια συνάρτηση εμφάνισης ----
-    async function renderAll(semesterName, absGroups, sylGroups) {
+        const reportType = document.getElementById('reportType').value;
         const container = document.getElementById('printContent');
         container.innerHTML = '';
 
@@ -84,29 +79,57 @@
             unitName = settings.unit_name || 'ΣΑΕΚ';
         } catch(e) {}
 
-        // 1. ΑΠΟΥΣΙΟΛΟΓΙΑ
-        if (absGroups && absGroups.length > 0) {
-            absGroups.forEach(group => {
-                const page = createAbsencePage(unitName, semesterName, group);
-                container.appendChild(page);
-            });
+        try {
+            let absData = null, sylData = null;
+
+            if (reportType === 'absences' || reportType === 'both') {
+                absData = await api(`/admin/print/groups?specialty_name=${encodeURIComponent(params.specialty_name)}&semester=${encodeURIComponent(params.semester)}&department=${encodeURIComponent(params.department)}`);
+            }
+            if (reportType === 'syllabus' || reportType === 'both') {
+                sylData = await api(`/admin/print/syllabus?specialty_name=${encodeURIComponent(params.specialty_name)}&semester=${encodeURIComponent(params.semester)}&department=${encodeURIComponent(params.department)}`);
+            }
+
+            renderAll(unitName, params.semester_name, absData?.groups || [], sylData?.groups || [], reportType);
+        } catch(err) {
+            alert('Σφάλμα φόρτωσης δεδομένων: ' + err.message);
+        }
+    }
+
+    // ---- Κύρια συνάρτηση εμφάνισης ----
+    function renderAll(unitName, semesterName, absGroups, sylGroups, reportType) {
+        const container = document.getElementById('printContent');
+        container.innerHTML = '';
+
+        if (reportType === 'absences' || reportType === 'both') {
+            if (absGroups && absGroups.length > 0) {
+                absGroups.forEach(group => {
+                    const page = createAbsencePage(unitName, semesterName, group);
+                    container.appendChild(page);
+                });
+            } else if (reportType === 'absences') {
+                container.innerHTML = '<p style="text-align:center;padding:40px;">Δεν βρέθηκαν δεδομένα απουσιολογίου για αυτό το τμήμα.</p>';
+            }
         }
 
-        // 2. ΒΙΒΛΙΑ ΥΛΗΣ
-        if (sylGroups && sylGroups.length > 0) {
-            // Τίτλος διαχωρισμού
-            const titleDiv = document.createElement('div');
-            titleDiv.className = 'syllabus-title';
-            titleDiv.textContent = 'ΒΙΒΛΙΟ ΥΛΗΣ';
-            container.appendChild(titleDiv);
-
-            sylGroups.forEach(group => {
-                const page = createSyllabusPage(unitName, semesterName, group);
-                container.appendChild(page);
-            });
+        if (reportType === 'syllabus' || reportType === 'both') {
+            if (sylGroups && sylGroups.length > 0) {
+                // Τίτλος διαχωρισμού (μόνο αν υπάρχουν και τα δύο)
+                if (reportType === 'both' && absGroups && absGroups.length > 0) {
+                    const titleDiv = document.createElement('div');
+                    titleDiv.className = 'syllabus-title';
+                    titleDiv.textContent = 'ΒΙΒΛΙΟ ΥΛΗΣ';
+                    container.appendChild(titleDiv);
+                }
+                sylGroups.forEach(group => {
+                    const page = createSyllabusPage(unitName, semesterName, group);
+                    container.appendChild(page);
+                });
+            } else if (reportType === 'syllabus') {
+                container.innerHTML = '<p style="text-align:center;padding:40px;">Δεν βρέθηκαν δεδομένα βιβλίου ύλης για αυτό το τμήμα.</p>';
+            }
         }
 
-        if ((!absGroups || absGroups.length === 0) && (!sylGroups || sylGroups.length === 0)) {
+        if (reportType === 'both' && (!absGroups || absGroups.length === 0) && (!sylGroups || sylGroups.length === 0)) {
             container.innerHTML = '<p style="text-align:center;padding:40px;">Δεν βρέθηκαν δεδομένα για αυτό το τμήμα.</p>';
         }
     }
@@ -116,11 +139,9 @@
         const page = document.createElement('div');
         page.className = 'page';
 
-        // Header
         const header = createHeader(unitName, semesterName, group);
         page.appendChild(header);
 
-        // Πίνακας
         const tableWrap = document.createElement('div');
         tableWrap.className = 'table-wrap';
         const table = document.createElement('table');
@@ -204,7 +225,6 @@
         tableWrap.appendChild(table);
         page.appendChild(tableWrap);
 
-        // Footer
         const footer = createFooter(group.teachers || []);
         page.appendChild(footer);
 
@@ -216,11 +236,9 @@
         const page = document.createElement('div');
         page.className = 'page page-syllabus';
 
-        // Header
         const header = createHeader(unitName, semesterName, group);
         page.appendChild(header);
 
-        // Πίνακας βιβλίου ύλης
         const tableWrap = document.createElement('div');
         tableWrap.className = 'table-wrap';
         const table = document.createElement('table');
@@ -286,7 +304,6 @@
         tableWrap.appendChild(table);
         page.appendChild(tableWrap);
 
-        // Footer (ίδιο με τα απουσιολόγια)
         const footer = createFooter(group.teachers || []);
         page.appendChild(footer);
 
@@ -375,6 +392,7 @@
 
     // ---- Events ----
     document.getElementById('departmentSelect').addEventListener('change', loadPrintData);
+    document.getElementById('reportType').addEventListener('change', loadPrintData);
     document.getElementById('printBtn').addEventListener('click', () => window.print());
 
     loadDepartments();
