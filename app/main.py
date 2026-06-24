@@ -2225,7 +2225,7 @@ async def admin_change_password(admin_id: int, data: dict, current_user = Depend
     hashed_admin = hash_password(new_password, rounds=12)
     
     # Ενημέρωση
-    cursor.execute("UPDATE users SET password = %s WHERE id = %s", (hashed, admin_id))
+    cursor.execute("UPDATE users SET password = %s WHERE id = %s", (hashed_admin, admin_id))
     conn.commit()
     cursor.close()
     conn.close()
