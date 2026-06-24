@@ -212,7 +212,7 @@
         
         <!-- Tabs των ρυθμίσεων (ΝΕΑ ΣΕΙΡΑ) -->
         <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
-            <button class="settings-tab-btn tab-btn active" data-settings-tab="signature">Γενικά</button>
+            <button class="settings-tab-btn tab-btn" data-settings-tab="signature">Γενικά</button>
             <button class="settings-tab-btn tab-btn" data-settings-tab="semesters">Εξάμηνα</button>
             <button class="settings-tab-btn tab-btn" data-settings-tab="import">Εισαγωγή CSV</button>
             <button class="settings-tab-btn tab-btn" data-settings-tab="senders">Λογαριασμοί email</button>
@@ -220,7 +220,7 @@
         </div>
 
         <!-- Tab: Γενικά (πρώην "Διάφορα" + υπογραφή + CC + Προς) -->
-        <div id="settings-signatureTab" class="tab-pane active">
+        <div id="settings-signatureTab" class="tab-pane">
             <label>Ονομασία μονάδας</label>
             <input type="text" id="settings-unitName" placeholder="π.χ. ΣΑΕΚ Ρεθύμνου">
             <button id="settings-saveUnitNameBtn" class="btn-primary">💾 Αποθήκευση</button>
@@ -426,6 +426,7 @@
     let absencesSpecialtySemesterList = [];
     let absencesFiltered = [];
     let emailSenders = [];
+    let settingsActiveTab = localStorage.getItem('settingsActiveTab') || 'signature';
 
     // Φόρτωση αποθηκευμένης καρτέλας από localStorage
     const savedTab = localStorage.getItem('activeTab');
@@ -1337,7 +1338,26 @@
     // Άνοιγμα modal
     document.getElementById('settingsBtn').onclick = () => {
         settingsModal.style.display = 'flex';
-        // Φόρτωση δεδομένων όταν ανοίγει το modal
+        // Φόρτωση της αποθηκευμένης καρτέλας (ή 'signature' αν δεν υπάρχει)
+        const savedTab = localStorage.getItem('settingsActiveTab') || 'signature';
+        settingsActiveTab = savedTab;
+        
+        // Ενεργοποίηση του σωστού tab και pane
+        document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#settingsModal .tab-pane').forEach(pane => pane.classList.remove('active'));
+        
+        const activeBtn = document.querySelector(`.settings-tab-btn[data-settings-tab="${savedTab}"]`);
+        if (activeBtn) activeBtn.classList.add('active');
+        
+        const activePane = document.getElementById('settings-' + savedTab + 'Tab');
+        if (activePane) activePane.classList.add('active');
+        
+        // Φόρτωση δεδομένων ανάλογα με την καρτέλα
+        if (savedTab === 'senders') loadSettingsSenders();
+        if (savedTab === 'admins') loadSettingsAdmins();
+        if (savedTab === 'semesters') loadSettingsSemesters();
+        
+        // Πάντα φόρτωση των γενικών ρυθμίσεων (υπογραφή, κ.λπ.)
         loadSettingsData();
     };
 
@@ -1378,9 +1398,10 @@
 
     document.querySelectorAll('.settings-tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Προσθήκη
+            e.stopPropagation();
             const tab = btn.dataset.settingsTab;
             if (!tab) return;
+            localStorage.setItem('settingsActiveTab', tab);   // <-- ΑΠΟΘΗΚΕΥΣΗ
             document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             document.querySelectorAll('#settingsModal .tab-pane').forEach(pane => pane.classList.remove('active'));
