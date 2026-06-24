@@ -55,9 +55,14 @@ def prehash_password(password: str) -> str:
     sha = hashlib.sha256(password.encode('utf-8')).digest()
     return base64.b64encode(sha).decode('ascii')
 
-def hash_password(password: str) -> str:
+def hash_password(password: str, rounds: int = 12) -> str:
     pre = prehash_password(password).encode('utf-8')
-    return bcrypt.hashpw(pre, bcrypt.gensalt()).decode('utf-8')
+    salt = bcrypt.gensalt(rounds=rounds)
+    return bcrypt.hashpw(pre, salt).decode('utf-8')
+
+def generate_random_password() -> str:
+    """Δημιουργεί έναν τυχαίο κωδικό 32 χαρακτήρων."""
+    return secrets.token_urlsafe(32)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     pre = prehash_password(plain_password).encode('utf-8')
@@ -524,7 +529,9 @@ def init_db():
                 semester VARCHAR(10),
                 department VARCHAR(10),
                 semester_id INT,
+                user_id INT NULL,
                 FOREIGN KEY (semester_id) REFERENCES semesters(id),
+                FOREIGN KEY (user_id) REFERENCES users(id),
                 UNIQUE KEY unique_amk_semester (amk, semester_id)
             )
         """)
@@ -698,7 +705,7 @@ async def request_otp(request: Request, background_tasks: BackgroundTasks):
     data = await request.json()
     email = data.get("email")
     if not email:
-        raise HTTPException(400, "Email required")
+        raise HTTPException(400, "Απαιτείται email")
 
     # Έλεγχος rate limiting ανά email
     if is_rate_limited(email, otp_request_tracker, OTP_COOLDOWN):
@@ -744,7 +751,7 @@ async def verify_otp(request: Request, response: Response):
     email = data.get("email")
     code = data.get("code")
     if not email or not code:
-        raise HTTPException(400, "Email and code required")
+        raise HTTPException(400, "Απαιτείται κωδικός")
 
     # Rate limiting ανά email για verify
     if is_rate_limited(email, otp_verify_tracker, VERIFY_COOLDOWN):
@@ -780,7 +787,9 @@ async def verify_otp(request: Request, response: Response):
             role = "student"
         else:
             raise HTTPException(404, "Λανθασμένος κωδικός ή το email δεν είναι εγγεγραμμένο")
-        cursor.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, %s)", (email, 'changeme', role))
+        random_pass = generate_random_password()
+        hashed_user = hash_password(random_pass, rounds=8)
+        cursor.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, %s)", (email, hashed_user, role))
         user_id = cursor.lastrowid
     else:
         user_id = user["id"]
@@ -790,7 +799,7 @@ async def verify_otp(request: Request, response: Response):
     elif student:
         user_role = "student"
     else:
-        raise HTTPException(404, "User not found")
+        raise HTTPException(404, "Δε βρέθηκε χρήστης")
     token = generate_session_token()
     expires = datetime.now() + timedelta(days=30)
     cursor.execute("""
@@ -845,7 +854,7 @@ async def import_teachers(file: UploadFile = File(...), current_user = Depends(r
     try:
         active_semester_id = get_active_semester_id()
         if active_semester_id is None:
-            raise HTTPException(400, "No active semester configured")
+            raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
         
         for row in reader:
             email = row.get('mail') or row.get('email')
@@ -855,9 +864,11 @@ async def import_teachers(file: UploadFile = File(...), current_user = Depends(r
             cursor.execute("SELECT id FROM users WHERE username = %s", (email,))
             user = cursor.fetchone()
             if not user:
+                random_pass = generate_random_password()
+                hashed_instructor = hash_password(random_pass, rounds=10)
                 cursor.execute(
                     "INSERT INTO users (username, password, role) VALUES (%s, %s, 'instructor')",
-                    (email, 'changeme')
+                    (email, hashed_instructor)
                 )
                 user_id = cursor.lastrowid
             else:
@@ -875,7 +886,7 @@ async def import_teachers(file: UploadFile = File(...), current_user = Depends(r
             """, (user_id, row.get('surname'), row.get('name'), email, row.get('phone', ''), active_semester_id))
         
         conn.commit()
-        return {"message": "Teachers imported with correct user linking and semester."}
+        return {"message": "Επιτυχής εισαγωγή εκπαιδευτών"}
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(e))
@@ -890,7 +901,7 @@ async def admin_add_teacher(data: dict, current_user = Depends(require_role("adm
     mail = data.get("mail")
     phone = data.get("phone", "")
     if not surname or not name or not mail:
-        raise HTTPException(400, "Missing required fields: surname, name, mail")
+        raise HTTPException(400, "Λείπουν τα απαραίτητα πεδία: surname, name, mail")
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -898,15 +909,17 @@ async def admin_add_teacher(data: dict, current_user = Depends(require_role("adm
         # 1. Πάρε το ενεργό εξάμηνο
         active_semester_id = get_active_semester_id()
         if active_semester_id is None:
-            raise HTTPException(400, "No active semester configured")
+            raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
         
         # 2. Get or create user
         cursor.execute("SELECT id FROM users WHERE username = %s", (mail,))
         user = cursor.fetchone()
         if not user:
+            random_pass = generate_random_password()
+            hashed_teacher = hash_password(random_pass, rounds=10)
             cursor.execute(
                 "INSERT INTO users (username, password, role) VALUES (%s, %s, 'instructor')",
-                (mail, 'changeme')
+                (mail, hashed_teacher)
             )
             user_id = cursor.lastrowid
         else:
@@ -918,11 +931,11 @@ async def admin_add_teacher(data: dict, current_user = Depends(require_role("adm
             VALUES (%s, %s, %s, %s, %s, %s)
         """, (user_id, surname, name, mail, phone, active_semester_id))
         conn.commit()
-        return {"message": "Teacher added successfully"}
+        return {"message": "Επιτυχής εισαγωγή εκπαιδευτή"}
     except mysql.connector.IntegrityError as e:
         conn.rollback()
         if "Duplicate entry" in str(e):
-            raise HTTPException(400, "Teacher with this email already exists in this semester")
+            raise HTTPException(400, "Υπάρχει ήδη εκπαιδευτής με αυτό το email σε αυτό το εξάμηνο")
         raise HTTPException(400, str(e))
     finally:
         cursor.close()
@@ -938,7 +951,7 @@ async def import_classes(file: UploadFile = File(...), current_user = Depends(re
     try:
         active_semester_id = get_active_semester_id()
         if active_semester_id is None:
-            raise HTTPException(400, "No active semester configured")
+            raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
 
         for row in reader:
             # Ανάγνωση weekly_hours (προαιρετικό, default 1)
@@ -978,7 +991,7 @@ async def import_classes(file: UploadFile = File(...), current_user = Depends(re
             else:
                 unit_id = unit[0]
 
-            # Σύνδεση με καθηγητή (ίδιο εξάμηνο)
+            # Σύνδεση με εκπαιδευτή (ίδιο εξάμηνο)
             teacher_surname = row.get('surname')
             teacher_name = row.get('name')
             if teacher_surname and teacher_name:
@@ -995,7 +1008,7 @@ async def import_classes(file: UploadFile = File(...), current_user = Depends(re
                         (teacher_id, unit_id)
                     )
         conn.commit()
-        return {"message": "Επιτυχής εισαγωγή μαθημάτων και συνδιδασκαλιών."}
+        return {"message": "Επιτυχής εισαγωγή μαθημάτων και αναθέσεων"}
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=400, detail=f"Σφάλμα εισαγωγής: {str(e)}")
@@ -1003,7 +1016,6 @@ async def import_classes(file: UploadFile = File(...), current_user = Depends(re
         cursor.close()
         conn.close()
 
-# -------------------- IMPORT STUDENTS --------------------
 @app.post("/admin/import-students")
 async def import_students(file: UploadFile = File(...), current_user = Depends(require_role("admin"))):
     content = await file.read()
@@ -1013,16 +1025,37 @@ async def import_students(file: UploadFile = File(...), current_user = Depends(r
     try:
         active_semester_id = get_active_semester_id()
         if active_semester_id is None:
-            raise HTTPException(400, "No active semester configured")
+            raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
         
         for row in reader:
             amk = row.get('amk', '').strip()
             if not amk:
                 continue
+            
+            email = row.get('mail', '').strip()
+            
+            # --- Δημιουργία student χρηστών στον πίνακα users ---
+            if email:
+                cursor.execute("SELECT id FROM users WHERE username = %s", (email,))
+                user = cursor.fetchone()
+                if not user:
+                    random_pass = generate_random_password()
+                    hashed_student = hash_password(random_pass, rounds=8)
+                    cursor.execute(
+                        "INSERT INTO users (username, password, role) VALUES (%s, %s, 'student')",
+                        (email, hashed_student)
+                    )
+                    user_id = cursor.lastrowid
+                else:
+                    user_id = user[0]
+            else:
+                user_id = None
+            # ----------------------------------------------------
+
             cursor.execute("""
                 INSERT INTO students
-                (amk, surname, name, father_name, mother_name, mail, phone, specialty_name, semester, department, semester_id)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                (amk, surname, name, father_name, mother_name, mail, phone, specialty_name, semester, department, semester_id, user_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE
                 surname = VALUES(surname),
                 name = VALUES(name),
@@ -1032,7 +1065,8 @@ async def import_students(file: UploadFile = File(...), current_user = Depends(r
                 phone = VALUES(phone),
                 specialty_name = VALUES(specialty_name),
                 semester = VALUES(semester),
-                department = VALUES(department)
+                department = VALUES(department),
+                user_id = VALUES(user_id)
                 -- semester_id δεν ενημερώνεται (παραμένει το αρχικό)
             """, (
                 amk,
@@ -1040,15 +1074,20 @@ async def import_students(file: UploadFile = File(...), current_user = Depends(r
                 row.get('name', ''),
                 row.get('father_name', ''),
                 row.get('mother_name', ''),
-                row.get('mail', ''),
+                email,
                 row.get('phone', ''),
                 row.get('specialty_name', ''),
                 row.get('semester', ''),
                 row.get('department', ''),
-                active_semester_id
+                active_semester_id,
+                user_id
             ))
             cursor.execute("SELECT id FROM students WHERE amk=%s", (amk,))
-            student_id = cursor.fetchone()[0]
+            result = cursor.fetchone()
+            if not result:
+                continue
+            student_id = result[0]
+            cursor.fetchall()  # consume any remaining results
             cursor.execute("DELETE FROM student_teams WHERE student_id=%s", (student_id,))
             teams_str = row.get('team', '').strip()
             if teams_str:
@@ -1076,7 +1115,7 @@ async def submit_attendance(entry: AttendanceEntry, current_user = Depends(requi
     try:
         active_semester_id = get_active_semester_id()
         if active_semester_id is None:
-            raise HTTPException(400, "No active semester configured")
+            raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
         
         # 1. Find teacher.id from user_id
         cursor.execute("SELECT id FROM teachers WHERE user_id = %s AND semester_id = %s", 
@@ -1199,7 +1238,7 @@ async def delete_today_lesson(course_unit_id: int, current_user = Depends(requir
     try:
         active_semester_id = get_active_semester_id()
         if active_semester_id is None:
-            raise HTTPException(400, "No active semester configured")
+            raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
         
         cursor.execute("SELECT id FROM teachers WHERE user_id = %s AND semester_id = %s", 
                        (current_user["user_id"], active_semester_id))
@@ -1278,7 +1317,7 @@ async def admin_list_teachers(
         if semester_id is None:
             semester_id = get_active_semester_id()
             if semester_id is None:
-                raise HTTPException(400, "No active semester configured")
+                raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
         
         query = "SELECT id, surname, name, mail, phone, user_id FROM teachers WHERE semester_id = %s"
         params = [semester_id]
@@ -1322,7 +1361,7 @@ async def admin_update_teacher(teacher_id: int, data: dict, current_user = Depen
                 updates.append(f"{field} = %s")
                 values.append(data[field])
         if not updates:
-            raise HTTPException(400, "No fields to update")
+            raise HTTPException(400, "Δεν υπάρχουν πεδία προς ενημέρωση")
         values.append(teacher_id)
         cursor.execute(f"UPDATE teachers SET {', '.join(updates)} WHERE id = %s", values)
         conn.commit()
@@ -1347,7 +1386,7 @@ async def admin_list_students(
         if semester_id is None:
             semester_id = get_active_semester_id()
             if semester_id is None:
-                raise HTTPException(400, "No active semester configured")
+                raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
         
         query = """
             SELECT s.id, s.amk, s.surname, s.name, s.father_name, s.mother_name,
@@ -1424,7 +1463,7 @@ async def admin_list_course_units(
         if semester_id is None:
             semester_id = get_active_semester_id()
             if semester_id is None:
-                raise HTTPException(400, "No active semester configured")
+                raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
         
         query = "SELECT * FROM course_units WHERE semester_id = %s"
         params = [semester_id]
@@ -1475,7 +1514,7 @@ async def admin_update_course_unit(unit_id: int, data: dict, current_user = Depe
                     updates.append(f"{field} = %s")
                     values.append(data[field])
         if not updates:
-            raise HTTPException(400, "No fields to update")
+            raise HTTPException(400, "Δεν υπάρχουν πεδία προς ενημέρωση")
         values.append(unit_id)
         cursor.execute(f"UPDATE course_units SET {', '.join(updates)} WHERE id = %s", values)
         conn.commit()
@@ -1502,11 +1541,11 @@ async def admin_add_course_unit(data: dict, current_user = Depends(require_role(
         weekly_hours = 1
 
     if not lesson_name or not specialty_name or not semester_str or not department:
-        raise HTTPException(400, "Missing required fields: lesson_name, specialty_name, semester, department")
+        raise HTTPException(400, "Λείπουν απαραίτητα πεδία: lesson_name, specialty_name, semester, department")
 
     semester_id = get_active_semester_id()
     if semester_id is None:
-        raise HTTPException(400, "No active semester configured")
+        raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1540,7 +1579,7 @@ async def admin_list_assignments(
         if semester_id is None:
             semester_id = get_active_semester_id()
             if semester_id is None:
-                raise HTTPException(400, "No active semester configured")
+                raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
         
         query = """
             SELECT 
@@ -1583,7 +1622,7 @@ async def admin_add_assignment(data: dict, current_user = Depends(require_role("
     teacher_id = data.get("teacher_id")
     course_unit_id = data.get("course_unit_id")
     if not teacher_id or not course_unit_id:
-        raise HTTPException(400, "teacher_id and course_unit_id required")
+        raise HTTPException(400, "Απαιτείται εκπαιδευτής και μάθημα")
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -1599,7 +1638,7 @@ async def admin_delete_assignment(data: dict, current_user = Depends(require_rol
     teacher_id = data.get("teacher_id")
     course_unit_id = data.get("course_unit_id")
     if not teacher_id or not course_unit_id:
-        raise HTTPException(400, "teacher_id and course_unit_id required")
+        raise HTTPException(400, "Απαιτούνται εκπαιδευτής και μάθημα")
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -1623,7 +1662,7 @@ async def admin_absences_overview(
         if semester_id is None:
             semester_id = get_active_semester_id()
             if semester_id is None:
-                raise HTTPException(400, "No active semester configured")
+                raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
 
         # 1. Λίστα όλων των συνδυασμών ειδικότητας/εξαμήνου
         cursor.execute("""
@@ -1752,7 +1791,7 @@ async def admin_print_departments(current_user = Depends(require_role("admin")))
     try:
         semester_id = get_active_semester_id()
         if semester_id is None:
-            raise HTTPException(400, "No active semester configured")
+            raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
         cursor.execute("""
             SELECT DISTINCT 
                 cu.specialty_name, 
@@ -1792,7 +1831,7 @@ async def admin_print_groups(
     try:
         semester_id = get_active_semester_id()
         if semester_id is None:
-            raise HTTPException(400, "No active semester configured")
+            raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
         
         # 1. Φόρτωση όλων των course_units για το συγκεκριμένο τμήμα
         cursor.execute("""
@@ -1899,7 +1938,7 @@ async def admin_print_syllabus(
     try:
         semester_id = get_active_semester_id()
         if semester_id is None:
-            raise HTTPException(400, "No active semester configured")
+            raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
         
         # 1. Φόρτωση όλων των course_units για το συγκεκριμένο τμήμα
         cursor.execute("""
@@ -2064,7 +2103,7 @@ async def admin_add_sender(data: dict, current_user = Depends(require_role("admi
     username = data.get("username")
     password = data.get("password")
     if not name or not email or not username or not password:
-        raise HTTPException(400, "Missing required fields")
+        raise HTTPException(400, "Λείπουν απαραίτητα πεδία")
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -2104,7 +2143,7 @@ async def admin_update_sender(sender_id: int, data: dict, current_user = Depends
     is_active = data.get("is_active")
     
     if not any([name, email, smtp_host, smtp_port, username, password, is_active is not None]):
-        raise HTTPException(400, "No fields to update")
+        raise HTTPException(400, "Δεν υπάρχουν πεδία προς ενημέρωση")
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -2139,11 +2178,11 @@ async def admin_add_admin(data: dict, current_user = Depends(require_role("admin
     password = data.get("password")
     if not username or not password:
         raise HTTPException(400, "Username and password required")
-    hashed = hash_password(password)   # χρησιμοποιεί την ίδια συνάρτηση που έχεις ήδη
+    hashed_admin = hash_password(password, rounds=12)
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, 'admin')", (username, hashed))
+        cursor.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, 'admin')", (username, hashed_admin))
         conn.commit()
         return {"message": "Admin user added", "id": cursor.lastrowid}
     except mysql.connector.IntegrityError:
@@ -2183,7 +2222,7 @@ async def admin_change_password(admin_id: int, data: dict, current_user = Depend
         raise HTTPException(404, "Διαχειριστής δεν βρέθηκε")
     
     # Κρυπτογράφηση του νέου κωδικού
-    hashed = hash_password(new_password)
+    hashed_admin = hash_password(new_password, rounds=12)
     
     # Ενημέρωση
     cursor.execute("UPDATE users SET password = %s WHERE id = %s", (hashed, admin_id))
@@ -2278,7 +2317,7 @@ async def admin_update_semester(semester_id: int, data: dict, current_user = Dep
     end_date = data.get("end_date")
     is_active = data.get("is_active")
     if not any([name, start_date, end_date, is_active is not None]):
-        raise HTTPException(400, "No fields to update")
+        raise HTTPException(400, "Δεν υπάρχουν πεδία προς ενημέρωση")
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -2318,16 +2357,16 @@ async def admin_delete_semester(semester_id: int, current_user = Depends(require
         # Έλεγχος αν υπάρχουν δεδομένα που συνδέονται με αυτό το εξάμηνο
         cursor.execute("SELECT COUNT(*) FROM teachers WHERE semester_id = %s", (semester_id,))
         if cursor.fetchone()[0] > 0:
-            raise HTTPException(400, "Cannot delete: there are teachers linked to this semester")
+            raise HTTPException(400, "Δε μπορεί να γίνει διαγραφή. Υπάρχουν εκπαιδευτές σε αυτό το εξάμηνο")
         cursor.execute("SELECT COUNT(*) FROM students WHERE semester_id = %s", (semester_id,))
         if cursor.fetchone()[0] > 0:
-            raise HTTPException(400, "Cannot delete: there are students linked to this semester")
+            raise HTTPException(400, "Δε μπορεί να γίνει διαγραφή. Υπάρχουν καταρτιζόμενοι σε αυτό το εξάμηνο")
         cursor.execute("SELECT COUNT(*) FROM course_units WHERE semester_id = %s", (semester_id,))
         if cursor.fetchone()[0] > 0:
-            raise HTTPException(400, "Cannot delete: there are course units linked to this semester")
+            raise HTTPException(400, "Δε μπορεί να γίνει διαγραφή. Υπάρχουν μαθήματα σε αυτό το εξάμηνο")
         cursor.execute("DELETE FROM semesters WHERE id = %s", (semester_id,))
         conn.commit()
-        return {"message": "Semester deleted"}
+        return {"message": "Το εξάμηνο διαγράφηκε"}
     finally:
         cursor.close()
         conn.close()
@@ -2337,7 +2376,7 @@ async def admin_delete_semester(semester_id: int, current_user = Depends(require
 async def admin_get_teachers_emails(data: dict, current_user = Depends(require_role("admin"))):
     teacher_ids = data.get("teacher_ids", [])
     if not teacher_ids:
-        raise HTTPException(400, "No teacher IDs provided")
+        raise HTTPException(400, "Δε βρέθηκαν email εκπαιδευτών")
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -2354,7 +2393,7 @@ async def admin_get_teachers_emails(data: dict, current_user = Depends(require_r
 async def admin_get_course_students_emails(data: dict, current_user = Depends(require_role("admin"))):
     course_unit_ids = data.get("course_unit_ids", [])
     if not course_unit_ids:
-        raise HTTPException(400, "No course unit IDs provided")
+        raise HTTPException(400, "Δε βρέθηκαν μαθήματα")
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -2611,7 +2650,7 @@ async def list_students_for_course(course_unit_id: int, current_user = Depends(g
         # 2. Βρες το course_unit και ελέγξε ότι ανήκει στο ενεργό εξάμηνο
         active_semester_id = get_active_semester_id()
         if active_semester_id is None:
-            raise HTTPException(400, "No active semester configured")
+            raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
         
         cursor.execute("""
             SELECT id, specialty_name, semester, department, team, semester_id
@@ -2619,7 +2658,7 @@ async def list_students_for_course(course_unit_id: int, current_user = Depends(g
         """, (course_unit_id,))
         course = cursor.fetchone()
         if not course:
-            raise HTTPException(404, "Course unit not found")
+            raise HTTPException(404, "Δε βρέθηκε μάθημα")
         
         if course["semester_id"] != active_semester_id:
             raise HTTPException(404, "Course unit not available in the current semester")
@@ -2637,7 +2676,7 @@ async def list_students_for_course(course_unit_id: int, current_user = Depends(g
                 WHERE t.user_id = %s AND ca.course_unit_id = %s
             """, (current_user["user_id"], course_unit_id))
             if not cursor.fetchone():
-                raise HTTPException(403, "You do not teach this course")
+                raise HTTPException(403, "Δε διδάσκετε αυτό το μάθημα")
         
         # 4. Διαφορετικά πεδία ανάλογα με τον ρόλο, και φιλτράρισμα μαθητών που ανήκουν στο ίδιο εξάμηνο
         if current_user["user_role"] == "admin":
@@ -2694,7 +2733,7 @@ async def get_total_teaching_hours(course_unit_id: int, current_user = Depends(g
                 WHERE t.user_id = %s AND ca.course_unit_id = %s AND cu.semester_id = %s
             """, (current_user["user_id"], course_unit_id, active_semester_id))
             if not cursor.fetchone():
-                raise HTTPException(403, "You do not have access to this course")
+                raise HTTPException(403, "Δεν έχετε πρόσβαση σε αυτό το μάθημα")
         
         # Υπολογισμός ωρών μόνο για μαθήματα του ενεργού εξαμήνου (ήδη το course_unit ανήκει στο active_semester_id)
         cursor.execute("""
@@ -2716,7 +2755,7 @@ async def get_lessons_for_course(course_unit_id: int, current_user = Depends(req
     try:
         active_semester_id = get_active_semester_id()
         if active_semester_id is None:
-            raise HTTPException(400, "No active semester configured")
+            raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
         
         # 1. Βρες το course_unit
         cursor.execute("SELECT id, specialty_name, semester, department, semester_id FROM course_units WHERE id = %s", (course_unit_id,))
@@ -2772,7 +2811,7 @@ async def get_my_absences_summary(current_user = Depends(get_current_user)):
     try:
         semester_id = get_active_semester_id()
         if semester_id is None:
-            raise HTTPException(400, "No active semester configured")
+            raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
         
         # 1. Βρες το email του χρήστη
         cursor.execute("SELECT username FROM users WHERE id = %s", (current_user["user_id"],))
@@ -2938,7 +2977,7 @@ async def get_student_absence_history(student_id: int, current_user = Depends(ge
     try:
         cursor.execute("SELECT id FROM students WHERE id = %s", (student_id,))
         if not cursor.fetchone():
-            raise HTTPException(404, "Student not found")
+            raise HTTPException(404, "Δε βρέθηκε καταρτιζόμενος")
         
         cursor.execute("""
             SELECT 
@@ -2971,7 +3010,7 @@ async def get_student_absences_summary(student_id: int, current_user = Depends(g
 
     active_semester_id = get_active_semester_id()
     if active_semester_id is None:
-        raise HTTPException(400, "No active semester configured")
+        raise HTTPException(400, "Δεν έχει επιλεγεί ενεργό εξάμηνο")
     
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -3098,7 +3137,7 @@ async def admin_login(request: Request, response: Response):
             record_failed_login(ip, email)
             raise HTTPException(401, "Λάθος στοιχεία εισόδου")
         # Migration σε bcrypt hash
-        new_hash = hash_password(password)
+        new_hash = hash_password(password, rounds=12)
         conn2 = get_db_connection()
         cursor2 = conn2.cursor()
         cursor2.execute("UPDATE users SET password = %s WHERE id = %s", (new_hash, user["id"]))
@@ -3153,7 +3192,7 @@ async def version_check(current_user = Depends(require_role("admin"))):
         return {
             "current_version": APP_VERSION,
             "new_version_available": False,
-            "error": "Could not check GitHub"
+            "error": "Δε μπόρεσε να ελεγχθεί η έκδοση του GitHub"
         }
     
     is_newer = latest_version != APP_VERSION
