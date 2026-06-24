@@ -86,6 +86,43 @@ def is_rate_limited(email: str, tracker: dict, cooldown: int) -> bool:
     del tracker[email]
     return False
 
+# -------------------- RATE LIMITING FOR ADMIN LOGIN --------------------
+login_attempts = {}  # key (IP:email) -> list of timestamps (float)
+
+LOGIN_ATTEMPT_WINDOW = 60   # 1 λεπτό σε δευτερόλεπτα
+LOGIN_ATTEMPT_MAX = 3       # 3 αποτυχίες
+LOGIN_BLOCK_TIME = 120      # 2 λεπτά σε δευτερόλεπτα
+
+def is_login_blocked(ip: str, email: str) -> bool:
+    """Επιστρέφει True αν το IP+email είναι σε κατάσταση μπλοκαρίσματος."""
+    key = f"{ip}:{email}"
+    now = time.time()
+    
+    # Καθαρισμός παλιών προσπαθειών (εκτός παραθύρου)
+    if key in login_attempts:
+        login_attempts[key] = [t for t in login_attempts[key] if now - t < LOGIN_ATTEMPT_WINDOW]
+        
+        # Αν έχουμε φτάσει το όριο, ελέγχουμε αν πέρασε το block time
+        if len(login_attempts[key]) >= LOGIN_ATTEMPT_MAX:
+            last_attempt = max(login_attempts[key])
+            if now - last_attempt < LOGIN_BLOCK_TIME:
+                return True
+            else:
+                # Αν πέρασε το block time, καθαρίζουμε τα attempts
+                login_attempts[key] = []
+                return False
+    return False
+
+def record_failed_login(ip: str, email: str):
+    """Καταγράφει μια αποτυχημένη προσπάθεια σύνδεσης."""
+    key = f"{ip}:{email}"
+    now = time.time()
+    if key not in login_attempts:
+        login_attempts[key] = []
+    login_attempts[key].append(now)
+    # Κρατάμε μόνο τις προσπάθειες μέσα στο παράθυρο (για οικονομία μνήμης)
+    login_attempts[key] = [t for t in login_attempts[key] if now - t < LOGIN_ATTEMPT_WINDOW]
+
 app = FastAPI(title="SAEK Attendance System API")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/favicon.ico")
@@ -3027,7 +3064,19 @@ async def admin_login(request: Request, response: Response):
     email = data.get("email")
     password = data.get("password")
     if not email or not password:
-        raise HTTPException(400, "Email and password required")
+        raise HTTPException(400, "Απαιτείται όνομα χρήστη και κωδικός")
+
+    # ---------- ΕΞΑΓΩΓΗ IP (με υποστήριξη proxy) ----------
+    xfwd = request.headers.get("X-Forwarded-For")
+    if xfwd and xfwd.strip():
+        ip = xfwd.split(",")[0].strip()
+    else:
+        ip = request.client.host
+
+    # ---------- RATE LIMITING ----------
+    if is_login_blocked(ip, email):
+        raise HTTPException(429, "Έχετε κάνει πολλές αποτυχημένες απόπειρες εισόδου, δοκιμάστε αργότερα")
+    # ------------------------------------
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -3037,7 +3086,8 @@ async def admin_login(request: Request, response: Response):
     conn.close()
 
     if not user or user["role"] != "admin":
-        raise HTTPException(401, "Invalid admin credentials")
+        record_failed_login(ip, email)
+        raise HTTPException(401, "Λάθος στοιχεία εισόδου")
 
     stored = user["password"]
 
@@ -3045,7 +3095,8 @@ async def admin_login(request: Request, response: Response):
     if not stored.startswith('$2b$') and len(stored) < 60:
         # Plaintext σύγκριση
         if stored != password:
-            raise HTTPException(401, "Invalid admin credentials")
+            record_failed_login(ip, email)
+            raise HTTPException(401, "Λάθος στοιχεία εισόδου")
         # Migration σε bcrypt hash
         new_hash = hash_password(password)
         conn2 = get_db_connection()
@@ -3057,7 +3108,14 @@ async def admin_login(request: Request, response: Response):
     else:
         # Κανονική επαλήθευση με bcrypt
         if not verify_password(password, stored):
-            raise HTTPException(401, "Invalid admin credentials")
+            record_failed_login(ip, email)
+            raise HTTPException(401, "Λάθος στοιχεία εισόδου")
+
+    # ---- ΕΠΙΤΥΧΗΣ ΣΥΝΔΕΣΗ ----
+    # Clean attempts to reset counter)
+    key = f"{ip}:{email}"
+    if key in login_attempts:
+        login_attempts[key] = []
 
     # Δημιουργία session token
     token = secrets.token_urlsafe(32)
