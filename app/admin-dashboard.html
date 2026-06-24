@@ -13,7 +13,7 @@
             <img src="/static/logo.png" alt="Λογότυπο" style="height: 40px; width: auto;">
             <div class="tabs">
                 <div class="tab-buttons">
-                    <button class="tab-btn active" data-tab="teachers">Εκπαιδευτές</button>
+                    <button class="tab-btn" data-tab="teachers">Εκπαιδευτές</button>
                     <button class="tab-btn" data-tab="students">Καταρτιζόμενοι</button>
                     <button class="tab-btn" data-tab="courses">Μαθήματα</button>
                     <button class="tab-btn" data-tab="assignments">Αναθέσεις</button>
@@ -25,15 +25,13 @@
             </a>
             <button id="settingsBtn" class="settings-btn" title="Ρυθμίσεις" style="background: none; border: none; font-size: 0.5rem; cursor: pointer;">⚙️</button>
             <div class="right-actions" style="margin-left: auto;">
-                <select id="semesterSelect" class="semester-select">
-                    <option value="">Φόρτωση...</option>
-                </select>
+                <span id="activeSemesterDisplay" style="padding: 12px 24px; background: #f1f5f9; border-radius: 40px; font-weight: 600; font-size: 1.2rem; color: #1e293b; white-space: nowrap;">Φόρτωση...</span>
                 <button id="emailGroupBtn" class="email-btn" title="Αποστολή email" style=font-size:2rem;>✉️ </button>
                 <button id="logoutBtn" class="logout-btn" title="Έξοδος" style="background: none; border: none; font-size: 1.8rem; cursor: pointer; padding: 0 8px;">⏻</button>
             </div>
         </div>
         <!-- Teachers Tab -->
-        <div id="teachersTab" class="tab-pane active">
+        <div id="teachersTab" class="tab-pane">
             <div class="table-wrapper">
                 <table id="teachersTable" class="teachers-table">
                     <thead>
@@ -429,6 +427,14 @@
     let absencesFiltered = [];
     let emailSenders = [];
 
+    // Φόρτωση αποθηκευμένης καρτέλας από localStorage
+    const savedTab = localStorage.getItem('activeTab');
+    if (savedTab) {
+        currentTab = savedTab;
+    } else {
+        currentTab = 'teachers';
+    }
+
     async function api(url, options={}) {
         const res = await fetch(url, { credentials: 'include', ...options, headers: { 'Content-Type': 'application/json', ...options.headers } });
         if (!res.ok) throw new Error(await res.text());
@@ -444,28 +450,26 @@
         try {
             const data = await api('/admin/semesters');
             allSemesters = data.semesters || [];
-            const select = document.getElementById('semesterSelect');
-            select.innerHTML = '<option value="">-- Επίλεξε εξάμηνο --</option>';
-            allSemesters.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s.id;
-                opt.textContent = `${s.name}${s.is_active ? ' (ενεργό)' : ''}`;
-                if (s.is_active) opt.style.fontWeight = 'bold';
-                select.appendChild(opt);
-            });
-            const activeData = await api('/admin/semesters/active');
-            if (activeData && activeData.active_semester_id) {
-                select.value = activeData.active_semester_id;
-                currentSemesterId = activeData.active_semester_id;
+            const displaySpan = document.getElementById('activeSemesterDisplay');
+            const active = allSemesters.find(s => s.is_active);
+            if (active) {
+                displaySpan.textContent = active.name;
+                currentSemesterId = active.id;
             } else if (allSemesters.length > 0) {
-                select.value = allSemesters[0].id;
+                displaySpan.textContent = allSemesters[0].name;
                 currentSemesterId = allSemesters[0].id;
+            } else {
+                displaySpan.textContent = 'Δεν υπάρχουν εξάμηνα';
+                currentSemesterId = null;
             }
             await refreshAllTabs();
-        } catch(err) { console.error('Failed to load semesters', err); }
+        } catch(err) {
+            console.error('Failed to load semesters', err);
+            document.getElementById('activeSemesterDisplay').textContent = 'Σφάλμα φόρτωσης';
+        }
     }
 
-    async function refreshAllTabs() {
+   async function refreshAllTabs() {
         if (currentTab === 'teachers') await loadAllTeachers();
         else if (currentTab === 'students') await loadAllStudents();
         else if (currentTab === 'courses') await loadAllCourses();
@@ -885,13 +889,6 @@
     }
 
     // Settings and add buttons
-    document.getElementById('semesterSelect').onchange = () => {
-        const newId = parseInt(document.getElementById('semesterSelect').value);
-        if (newId) {
-            currentSemesterId = newId;
-            refreshAllTabs();
-        }
-    };
 
     function getFriendlyErrorMessage(error, context) {
         let msg = error.message || String(error);
@@ -1278,14 +1275,15 @@
     // Tab switching για την κύρια εφαρμογή (μόνο για τα tab-buttons εκτός modal)
     document.querySelectorAll('.tab-buttons .tab-btn').forEach(btn => {
         btn.onclick = async () => {
-            // Αν το modal των ρυθμίσεων είναι ανοιχτό, αγνοούμε το κλικ
             if (settingsModal.style.display === 'flex') return;
             
             currentTab = btn.dataset.tab;
+            localStorage.setItem('activeTab', currentTab);
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
             document.getElementById(`${currentTab}Tab`).classList.add('active');
+            
             if (currentTab === 'teachers') { await loadAllTeachers(); setupFilters('teachers'); }
             else if (currentTab === 'students') { await loadAllStudents(); setupFilters('students'); }
             else if (currentTab === 'courses') { await loadAllCourses(); setupFilters('courses'); }
@@ -1297,10 +1295,21 @@
     // Initial load
     async function initialLoad() {
         await loadSemesters();
-        // Μετά τη φόρτωση και το refreshAllTabs, ενεργοποιούμε τα φίλτρα για την αρχική καρτέλα (teachers)
-        setupFilters('teachers');
+        // Ενεργοποίηση σωστής καρτέλας
+        document.querySelectorAll('.tab-buttons .tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === currentTab);
+        });
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.toggle('active', pane.id === currentTab + 'Tab');
+        });
+        setupFilters(currentTab);
+        // Φόρτωση δεδομένων για την τρέχουσα καρτέλα
+        if (currentTab === 'teachers') await loadAllTeachers();
+        else if (currentTab === 'students') await loadAllStudents();
+        else if (currentTab === 'courses') await loadAllCourses();
+        else if (currentTab === 'assignments') await loadAllAssignments();
+        else if (currentTab === 'absences') await loadAbsences(document.getElementById('absencesSpecialtySelect').value);
     }
-    initialLoad();
 
 
     setTimeout(() => {
@@ -1829,6 +1838,7 @@
     document.getElementById('uploadStudentsBtn').addEventListener('click', () => {
         uploadCSV('/admin/import-students', 'csvStudents', 'csvStudentsMsg');
     });
+    initialLoad();
 
 </script>
 </body>
