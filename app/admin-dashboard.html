@@ -132,7 +132,7 @@
     </div>
 </div>
 
-<!-- Modals (unchanged) -->
+<!-- Modals -->
 <div id="addTeacherModal" class="modal">
     <div class="modal-content">
         <h3>👤 Νέος Εκπαιδευτής</h3>
@@ -167,7 +167,7 @@
         </div>
     </div>
 </div>
-<!-- Email Modal with conditional checkboxes -->
+<!-- Email Modal -->
 <div id="emailModal" class="modal">
     <div class="modal-content">
         <h3>Αποστολή μαζικού email</h3>
@@ -200,7 +200,7 @@
     </div>
 </div>
 <!-- Settings Modal -->
-<div id="settingsModal" class="modal" style="display: none; align-items: flex-start; padding-top: 30px; background: rgba(0,0,0,0.6);">
+<div id="settingsModal" class="modal" style="display: none; align-items: flex-start; padding-top: 30px; background: rgba(0,0,0,0.3); backdrop-filter: blur(2px);">
     <div class="modal-content" style="max-width: 1100px; max-height: 90vh; overflow-y: auto; width: 95%; padding: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <div style="display: flex; align-items: center; gap: 12px;">
@@ -210,37 +210,33 @@
             <button id="closeSettingsBtn" style="background: none; border: none; font-size: 1.8rem; cursor: pointer; padding: 0 8px;">✕</button>
         </div>
         
-        <!-- Tabs των ρυθμίσεων (ΝΕΑ ΣΕΙΡΑ) -->
+        <!-- Tabs των ρυθμίσεων -->
         <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
             <button class="settings-tab-btn tab-btn" data-settings-tab="signature">Γενικά</button>
             <button class="settings-tab-btn tab-btn" data-settings-tab="semesters">Εξάμηνα</button>
             <button class="settings-tab-btn tab-btn" data-settings-tab="import">Εισαγωγή CSV</button>
             <button class="settings-tab-btn tab-btn" data-settings-tab="senders">Λογαριασμοί email</button>
             <button class="settings-tab-btn tab-btn" data-settings-tab="admins">Διαχειριστές</button>
+            <button class="settings-tab-btn tab-btn" data-settings-tab="appearance">Εμφάνιση</button>
         </div>
 
-        <!-- Tab: Γενικά (πρώην "Διάφορα" + υπογραφή + CC + Προς) -->
+        <!-- Tab: Γενικά -->
         <div id="settings-signatureTab" class="tab-pane">
             <label>Ονομασία μονάδας</label>
             <input type="text" id="settings-unitName" placeholder="π.χ. ΣΑΕΚ Ρεθύμνου">
             <button id="settings-saveUnitNameBtn" class="btn-primary">💾 Αποθήκευση</button>
             <div id="settings-unitNameMsg" class="message"></div>
-
             <hr>
-
             <label>Υπογραφή (θα προστίθεται αυτόματα στο τέλος κάθε email)</label>
             <textarea id="settings-signatureText" rows="6" style="font-family: monospace; resize: vertical;"></textarea>
             <button id="settings-saveSignatureBtn" class="btn-primary">💾 Αποθήκευση υπογραφής</button>
             <div id="settings-signatureMsg" class="message"></div>
-
             <hr>
-
             <label>Παραλήπτες "Προς" (προαιρετικά, θα λαμβάνουν όλα τα εξερχόμενα email ως κύριοι παραλήπτες, διαχωρισμός με ",")</label>
             <input type="text" id="settings-toRecipient" placeholder="π.χ. grammateia@saek_example.gr">
             <button id="settings-saveToRecipientBtn" class="btn-primary">💾 Αποθήκευση</button>
             <div id="settings-toRecipientMsg" class="message"></div>
             <hr>
-
             <label>Παραλήπτες "CC" (προαιρετικά, θα τους κοινοποιούνται όλα τα εξερχόμενα email, διαχωρισμός με ",")</label>
             <input type="text" id="settings-ccRecipients" placeholder="π.χ. director@saek_example.gr, grammateia@saek_example.gr">
             <button id="settings-saveCcBtn" class="btn-primary">💾 Αποθήκευση CC</button>
@@ -266,8 +262,6 @@
         <div id="settings-importTab" class="tab-pane">
             <h3>📥 Εισαγωγή δεδομένων από CSV</h3>
             <p>Τα αρχεία πρέπει να είναι σε κωδικοποίηση UTF-8, με διαχωριστικό κόμμα (,).</p>
-
-            <!-- Εκπαιδευτές -->
             <div class="import-section" style="margin-bottom:20px;">
                 <label><strong>👤 Εκπαιδευτές</strong></label>
                 <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
@@ -275,14 +269,9 @@
                     <button id="uploadTeachersBtn" class="btn-primary">📤 Αποστολή</button>
                 </div>
                 <div id="csvTeachersMsg" class="message"></div>
-                <div style="font-size:0.85rem; color:#475569; margin-top:4px;">
-                    Στήλες: <code>surname, name, mail, phone</code>
-                </div>
+                <div style="font-size:0.85rem; color:#475569; margin-top:4px;">Στήλες: <code>surname, name, mail, phone</code></div>
             </div>
-
             <hr>
-
-            <!-- Μαθήματα & Αναθέσεις -->
             <div class="import-section" style="margin-bottom:20px;">
                 <label><strong>📘 Μαθήματα και αναθέσεις</strong></label>
                 <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
@@ -290,14 +279,9 @@
                     <button id="uploadClassesBtn" class="btn-primary">📤 Αποστολή</button>
                 </div>
                 <div id="csvClassesMsg" class="message"></div>
-                <div style="font-size:0.85rem; color:#475569; margin-top:4px;">
-                    Στήλες: <code>specialty_name, semester, department, team, lesson_name, type_indicator, classroom, weekly_hours, surname, name</code>
-                </div>
+                <div style="font-size:0.85rem; color:#475569; margin-top:4px;">Στήλες: <code>specialty_name, semester, department, team, lesson_name, type_indicator, classroom, weekly_hours, surname, name</code></div>
             </div>
-
             <hr>
-
-            <!-- Φοιτητές -->
             <div class="import-section" style="margin-bottom:20px;">
                 <label><strong>🎓 Καταρτιζόμενοι</strong></label>
                 <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
@@ -305,9 +289,7 @@
                     <button id="uploadStudentsBtn" class="btn-primary">📤 Αποστολή</button>
                 </div>
                 <div id="csvStudentsMsg" class="message"></div>
-                <div style="font-size:0.85rem; color:#475569; margin-top:4px;">
-                    Στήλες: <code>amk, surname, name, father_name, mother_name, mail, phone, specialty_name, semester, department, team</code>
-                </div>
+                <div style="font-size:0.85rem; color:#475569; margin-top:4px;">Στήλες: <code>amk, surname, name, father_name, mother_name, mail, phone, specialty_name, semester, department, team</code></div>
             </div>
         </div>
 
@@ -343,6 +325,62 @@
             </table>
         </div>
 
+        <!-- Tab: Εμφάνιση -->
+        <div id="settings-appearanceTab" class="tab-pane">
+            <h3>🎨 Προσαρμογή εμφάνισης πινάκων</h3>
+            <p style="color: #475569; margin-bottom: 16px;">Οι ρυθμίσεις είναι προσωπικές για τον λογαριασμό σας.</p>
+
+            <div class="preferences-group" style="margin-bottom: 20px;">
+                <h4 style="margin: 0 0 8px 0;">👤 Εκπαιδευτές</h4>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="teachers" data-field="email" checked> Email</label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="teachers" data-field="phone" checked> Τηλέφωνο</label>
+                </div>
+            </div>
+
+            <div class="preferences-group" style="margin-bottom: 20px;">
+                <h4 style="margin: 0 0 8px 0;">🎓 Καταρτιζόμενοι</h4>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="students" data-field="amk" checked> ΑΜΚ</label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="students" data-field="father_name" checked> Πατρώνυμο</label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="students" data-field="mother_name" checked> Μητρώνυμο</label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="students" data-field="email" checked> Email</label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="students" data-field="phone" checked> Τηλέφωνο</label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="students" data-field="specialty" checked> Ειδικότητα</label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="students" data-field="semester" checked> Εξάμηνο</label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="students" data-field="department" checked> Τμήμα</label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="students" data-field="team" checked> Ομάδα</label>
+                </div>
+            </div>
+
+            <div class="preferences-group" style="margin-bottom: 20px;">
+                <h4 style="margin: 0 0 8px 0;">📘 Μαθήματα</h4>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="courses" data-field="semester" checked> Εξάμηνο</label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="courses" data-field="team" checked> Ομάδα</label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="courses" data-field="classroom" checked> Αίθουσα</label>
+                </div>
+            </div>
+
+            <div class="preferences-group" style="margin-bottom: 20px;">
+                <h4 style="margin: 0 0 8px 0;">📊 Απουσίες</h4>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="absences" data-field="amk" checked> ΑΜΚ</label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" data-section="absences" data-field="course_names" checked> Ονόματα μαθημάτων</label>
+                </div>
+                <p style="font-size:0.85rem; color:#64748b; margin-top: 4px;">Αν απενεργοποιήσετε τα ονόματα, θα εμφανίζονται αύξοντες αριθμοί (1, 2, 3...)</p>
+            </div>
+
+            <div class="preferences-group" style="margin-bottom: 20px;">
+                <h4 style="margin: 0 0 8px 0;">🔧 Δυνατότητα επεξεργασίας</h4>
+                <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" id="editModeSwitch" checked> Ενεργή</label>
+                <p style="font-size:0.85rem; color:#64748b; margin-top: 4px;">Απενεργοποιώντας το, κρύβονται όλα τα κουμπιά επεξεργασίας/διαγραφής.</p>
+            </div>
+
+            <button id="saveAppearanceBtn" class="btn-primary">💾 Αποθήκευση εμφάνισης</button>
+            <div id="appearanceMsg" class="message"></div>
+        </div>
+
         <div style="text-align: center; margin-top: 20px;">
             <button id="closeSettingsBtnBottom" class="btn-secondary">← Επιστροφή</button>
         </div>
@@ -366,7 +404,7 @@
     </div>
 </div>
 
-<!-- Modals για επεξεργασία sender και semester (μέσα στο settings modal) -->
+<!-- Modals επεξεργασίας -->
 <div id="settings-editSenderModal" class="modal" style="display: none; background: rgba(0,0,0,0.5);">
     <div class="modal-content" style="max-width: 500px;">
         <h3>✏️ Επεξεργασία λογαριασμού αποστολής</h3>
@@ -406,6 +444,7 @@
         </div>
     </div>
 </div>
+
 <script>
     let currentTab = 'teachers';
     let editingId = null;
@@ -436,6 +475,10 @@
         currentTab = 'teachers';
     }
 
+    // Global userPreferences (για άμεση πρόσβαση)
+    let userPreferences = {};
+    window.userPreferences = userPreferences;
+
     async function api(url, options={}) {
         const res = await fetch(url, { credentials: 'include', ...options, headers: { 'Content-Type': 'application/json', ...options.headers } });
         if (!res.ok) throw new Error(await res.text());
@@ -447,23 +490,30 @@
     function escapeHtml(str) { if (str == null) return ''; str = String(str); return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
 
     // ---------- Semester handling ----------
-    async function loadSemesters() {
+    async function loadSemesters(initialLoad = false) {
         try {
             const data = await api('/admin/semesters');
             allSemesters = data.semesters || [];
             const displaySpan = document.getElementById('activeSemesterDisplay');
             const active = allSemesters.find(s => s.is_active);
+            let newSemesterId = null;
             if (active) {
                 displaySpan.textContent = active.name;
-                currentSemesterId = active.id;
+                newSemesterId = active.id;
             } else if (allSemesters.length > 0) {
                 displaySpan.textContent = allSemesters[0].name;
-                currentSemesterId = allSemesters[0].id;
+                newSemesterId = allSemesters[0].id;
             } else {
                 displaySpan.textContent = 'Δεν υπάρχουν εξάμηνα';
-                currentSemesterId = null;
+                newSemesterId = null;
             }
-            await refreshAllTabs();
+            
+            if (!initialLoad && newSemesterId !== currentSemesterId) {
+                currentSemesterId = newSemesterId;
+                await refreshAllTabs();
+            } else {
+                currentSemesterId = newSemesterId;
+            }
         } catch(err) {
             console.error('Failed to load semesters', err);
             document.getElementById('activeSemesterDisplay').textContent = 'Σφάλμα φόρτωσης';
@@ -480,46 +530,387 @@
 
     function matchesFilter(value, filter) { if (!filter) return true; const orParts = filter.split('|').map(s => s.trim()).filter(s => s); if (orParts.length > 1) { return orParts.some(part => matchesFilter(value, part)); } const andParts = filter.split('&').map(s => s.trim()).filter(s => s); if (andParts.length > 1) { return andParts.every(part => (value || '').toLowerCase().includes(part.toLowerCase())); } return (value || '').toLowerCase().includes(filter.toLowerCase()); }
 
-    // Teachers (with semester filter)
+    // -------------------- TEACHERS --------------------
     async function loadAllTeachers() {
         if (!currentSemesterId) { teachersFullData = []; filterTeachers(); return; }
         const data = await api(`/admin/teachers?semester_id=${currentSemesterId}`);
         teachersFullData = data.teachers;
         filterTeachers();
     }
-    function renderTeachers() { const tbody = document.querySelector('#teachersTable tbody'); tbody.innerHTML = ''; for (const t of teachersFiltered) { const row = tbody.insertRow(); row.dataset.id = t.id; row.innerHTML = `<td class="editable-field surname">${escapeHtml(t.surname)}</td><td class="editable-field name">${escapeHtml(t.name)}</td><td class="editable-field mail">${escapeHtml(t.mail)}</td><td class="editable-field phone phone-col">${escapeHtml(t.phone || '')}</td><td class="actions-col"><button class="edit-btn">✏️</button> <button class="save-btn" style="display:none;">💾</button> <button class="cancel-btn" style="display:none;">↩️</button> <button class="delete-teacher-btn">🗑️</button></td>`; attachEditHandlers(row, 'teachers', t.id); row.querySelector('.delete-teacher-btn').onclick = async () => { if (confirm(`Διαγραφή εκπαιδευτή ${t.surname} ${t.name};`)) { await api(`/admin/teachers/${t.id}`, { method: 'DELETE' }); await loadAllTeachers(); } }; } }
-    function filterTeachers() { const filters = { surname: document.getElementById('teacherFilterSurname').value, name: document.getElementById('teacherFilterName').value, mail: document.getElementById('teacherFilterMail').value, phone: document.getElementById('teacherFilterPhone').value }; teachersFiltered = teachersFullData.filter(t => { if (!matchesFilter(t.surname, filters.surname)) return false; if (!matchesFilter(t.name, filters.name)) return false; if (!matchesFilter(t.mail, filters.mail)) return false; if (!matchesFilter(t.phone, filters.phone)) return false; return true; }); if (sortState.teachers.order) sortData(teachersFiltered, sortState.teachers.col, sortState.teachers.order); renderTeachers(); }
 
-    // Students
+    function renderTeachers() {
+        const tbody = document.querySelector('#teachersTable tbody');
+        tbody.innerHTML = '';
+        const prefs = window.userPreferences.teachers || { email: true, phone: true };
+        const editMode = window.userPreferences.edit_mode !== false;
+
+        const table = document.getElementById('teachersTable');
+        const headers = table.querySelectorAll('thead th');
+        const filterRow = table.querySelector('thead tr.filter-row');
+        if (headers.length >= 5) {
+            headers[2].classList.toggle('hidden-column', !prefs.email);
+            headers[3].classList.toggle('hidden-column', !prefs.phone);
+            headers[4].classList.toggle('hidden-column', !editMode);
+        }
+        if (filterRow) {
+            const filterCells = filterRow.querySelectorAll('th');
+            if (filterCells.length >= 5) {
+                filterCells[2].classList.toggle('hidden-column', !prefs.email);
+                filterCells[3].classList.toggle('hidden-column', !prefs.phone);
+                filterCells[4].classList.toggle('hidden-column', !editMode);
+            }
+        }
+
+        for (const t of teachersFiltered) {
+            const row = tbody.insertRow();
+            row.dataset.id = t.id;
+            let html = `<td class="editable-field surname">${escapeHtml(t.surname)}</td>
+                        <td class="editable-field name">${escapeHtml(t.name)}</td>`;
+            html += `<td class="editable-field mail${prefs.email ? '' : ' hidden-column'}">${escapeHtml(t.mail)}</td>`;
+            html += `<td class="editable-field phone phone-col${prefs.phone ? '' : ' hidden-column'}">${escapeHtml(t.phone || '')}</td>`;
+            if (editMode) {
+                html += `<td class="actions-col">
+                            <button class="edit-btn">✏️</button>
+                            <button class="save-btn" style="display:none;">💾</button>
+                            <button class="cancel-btn" style="display:none;">↩️</button>
+                            <button class="delete-teacher-btn">🗑️</button>
+                        </td>`;
+            } else {
+                html += `<td class="actions-col hidden-column"></td>`;
+            }
+            row.innerHTML = html;
+            if (editMode) {
+                attachEditHandlers(row, 'teachers', t.id);
+                row.querySelector('.delete-teacher-btn').onclick = async () => {
+                    if (confirm(`Διαγραφή εκπαιδευτή ${t.surname} ${t.name};`)) {
+                        await api(`/admin/teachers/${t.id}`, { method: 'DELETE' });
+                        await loadAllTeachers();
+                    }
+                };
+            }
+        }
+    }
+
+    function filterTeachers() {
+        const filters = {
+            surname: document.getElementById('teacherFilterSurname')?.value || '',
+            name: document.getElementById('teacherFilterName')?.value || '',
+            mail: document.getElementById('teacherFilterMail')?.value || '',
+            phone: document.getElementById('teacherFilterPhone')?.value || ''
+        };
+        teachersFiltered = teachersFullData.filter(t => {
+            if (!matchesFilter(t.surname, filters.surname)) return false;
+            if (!matchesFilter(t.name, filters.name)) return false;
+            if (!matchesFilter(t.mail, filters.mail)) return false;
+            if (!matchesFilter(t.phone, filters.phone)) return false;
+            return true;
+        });
+        if (sortState.teachers.order) sortData(teachersFiltered, sortState.teachers.col, sortState.teachers.order);
+        renderTeachers();
+    }
+
+    // -------------------- STUDENTS --------------------
     async function loadAllStudents() {
         if (!currentSemesterId) { studentsFullData = []; filterStudents(); return; }
         const data = await api(`/admin/students?semester_id=${currentSemesterId}`);
         studentsFullData = data.students;
         filterStudents();
     }
-    function renderStudents() { const tbody = document.querySelector('#studentsTable tbody'); tbody.innerHTML = ''; for (const s of studentsFiltered) { const row = tbody.insertRow(); row.dataset.id = s.id; row.innerHTML = `<td class="editable-field amk amk-col">${escapeHtml(s.amk||'')}</td><td class="editable-field surname">${escapeHtml(s.surname)}</td><td class="editable-field name">${escapeHtml(s.name)}</td><td class="editable-field father_name">${escapeHtml(s.father_name||'')}</td><td class="editable-field mother_name">${escapeHtml(s.mother_name||'')}</td><td class="editable-field mail">${escapeHtml(s.mail||'')}</td><td class="editable-field phone phone-col">${escapeHtml(s.phone||'')}</td><td class="editable-field specialty_name">${escapeHtml(s.specialty_name)}</td><td class="editable-field semester semester-col">${escapeHtml(s.semester)}</td><td class="editable-field department dept-col">${escapeHtml(s.department)}</td><td class="editable-field teams teams-col">${(s.teams||[]).map(t=>`<span class="team-tag">${escapeHtml(t)}</span>`).join('')}</td><td class="actions-col"><button class="edit-btn">✏️</button> <button class="save-btn" style="display:none;">💾</button> <button class="cancel-btn" style="display:none;">↩️</button> <button class="delete-student-btn">🗑️</button></td>`; attachEditHandlers(row, 'students', s.id); row.querySelector('.delete-student-btn').onclick = async () => { if (confirm(`Διαγραφή μαθητή ${s.surname} ${s.name};`)) { await api(`/admin/students/${s.id}`, { method: 'DELETE' }); await loadAllStudents(); } }; } }
-    function filterStudents() { const filters = { amk: document.getElementById('studentFilterAmk').value, surname: document.getElementById('studentFilterSurname').value, name: document.getElementById('studentFilterName').value, father: document.getElementById('studentFilterFather').value, mother: document.getElementById('studentFilterMother').value, mail: document.getElementById('studentFilterMail').value, phone: document.getElementById('studentFilterPhone').value, specialty: document.getElementById('studentFilterSpecialty').value, semester: document.getElementById('studentFilterSemester').value, dept: document.getElementById('studentFilterDept').value, teams: document.getElementById('studentFilterTeams').value }; studentsFiltered = studentsFullData.filter(s => { if (!matchesFilter(s.amk, filters.amk)) return false; if (!matchesFilter(s.surname, filters.surname)) return false; if (!matchesFilter(s.name, filters.name)) return false; if (!matchesFilter(s.father_name, filters.father)) return false; if (!matchesFilter(s.mother_name, filters.mother)) return false; if (!matchesFilter(s.mail, filters.mail)) return false; if (!matchesFilter(s.phone, filters.phone)) return false; if (!matchesFilter(s.specialty_name, filters.specialty)) return false; if (!matchesFilter(s.semester, filters.semester)) return false; if (!matchesFilter(s.department, filters.dept)) return false; if (filters.teams) { const teamStr = (s.teams||[]).join(' '); if (!matchesFilter(teamStr, filters.teams)) return false; } return true; }); if (sortState.students.order) sortData(studentsFiltered, sortState.students.col, sortState.students.order); renderStudents(); }
 
-    // Courses
+    function renderStudents() {
+        const tbody = document.querySelector('#studentsTable tbody');
+        tbody.innerHTML = '';
+        const prefs = window.userPreferences.students || { amk: true, father_name: true, mother_name: true, email: true, phone: true, specialty: true, semester: true, department: true, team: true };
+        const editMode = window.userPreferences.edit_mode !== false;
+
+        const table = document.getElementById('studentsTable');
+        const headers = table.querySelectorAll('thead th');
+        const filterRow = table.querySelector('thead tr.filter-row');
+        if (headers.length >= 12) {
+            headers[0].classList.toggle('hidden-column', !prefs.amk);
+            headers[3].classList.toggle('hidden-column', !prefs.father_name);
+            headers[4].classList.toggle('hidden-column', !prefs.mother_name);
+            headers[5].classList.toggle('hidden-column', !prefs.email);
+            headers[6].classList.toggle('hidden-column', !prefs.phone);
+            headers[7].classList.toggle('hidden-column', !prefs.specialty);
+            headers[8].classList.toggle('hidden-column', !prefs.semester);
+            headers[9].classList.toggle('hidden-column', !prefs.department);
+            headers[10].classList.toggle('hidden-column', !prefs.team);
+            headers[11].classList.toggle('hidden-column', !editMode);
+        }
+        if (filterRow) {
+            const filterCells = filterRow.querySelectorAll('th');
+            if (filterCells.length >= 12) {
+                filterCells[0].classList.toggle('hidden-column', !prefs.amk);
+                filterCells[3].classList.toggle('hidden-column', !prefs.father_name);
+                filterCells[4].classList.toggle('hidden-column', !prefs.mother_name);
+                filterCells[5].classList.toggle('hidden-column', !prefs.email);
+                filterCells[6].classList.toggle('hidden-column', !prefs.phone);
+                filterCells[7].classList.toggle('hidden-column', !prefs.specialty);
+                filterCells[8].classList.toggle('hidden-column', !prefs.semester);
+                filterCells[9].classList.toggle('hidden-column', !prefs.department);
+                filterCells[10].classList.toggle('hidden-column', !prefs.team);
+                filterCells[11].classList.toggle('hidden-column', !editMode);
+            }
+        }
+
+        for (const s of studentsFiltered) {
+            const row = tbody.insertRow();
+            row.dataset.id = s.id;
+            let html = '';
+            html += `<td class="editable-field amk amk-col${prefs.amk ? '' : ' hidden-column'}">${escapeHtml(s.amk||'')}</td>`;
+            html += `<td class="editable-field surname">${escapeHtml(s.surname)}</td>`;
+            html += `<td class="editable-field name">${escapeHtml(s.name)}</td>`;
+            html += `<td class="editable-field father_name${prefs.father_name ? '' : ' hidden-column'}">${escapeHtml(s.father_name||'')}</td>`;
+            html += `<td class="editable-field mother_name${prefs.mother_name ? '' : ' hidden-column'}">${escapeHtml(s.mother_name||'')}</td>`;
+            html += `<td class="editable-field mail${prefs.email ? '' : ' hidden-column'}">${escapeHtml(s.mail||'')}</td>`;
+            html += `<td class="editable-field phone phone-col${prefs.phone ? '' : ' hidden-column'}">${escapeHtml(s.phone||'')}</td>`;
+            html += `<td class="editable-field specialty_name${prefs.specialty ? '' : ' hidden-column'}">${escapeHtml(s.specialty_name)}</td>`;
+            html += `<td class="editable-field semester semester-col${prefs.semester ? '' : ' hidden-column'}">${escapeHtml(s.semester)}</td>`;
+            html += `<td class="editable-field department dept-col${prefs.department ? '' : ' hidden-column'}">${escapeHtml(s.department)}</td>`;
+            html += `<td class="editable-field teams teams-col${prefs.team ? '' : ' hidden-column'}">${(s.teams||[]).map(t=>`<span class="team-tag">${escapeHtml(t)}</span>`).join('')}</td>`;
+            if (editMode) {
+                html += `<td class="actions-col">
+                            <button class="edit-btn">✏️</button>
+                            <button class="save-btn" style="display:none;">💾</button>
+                            <button class="cancel-btn" style="display:none;">↩️</button>
+                            <button class="delete-student-btn">🗑️</button>
+                        </td>`;
+            } else {
+                html += `<td class="actions-col hidden-column"></td>`;
+            }
+            row.innerHTML = html;
+            if (editMode) {
+                attachEditHandlers(row, 'students', s.id);
+                row.querySelector('.delete-student-btn').onclick = async () => {
+                    if (confirm(`Διαγραφή μαθητή ${s.surname} ${s.name};`)) {
+                        await api(`/admin/students/${s.id}`, { method: 'DELETE' });
+                        await loadAllStudents();
+                    }
+                };
+            }
+        }
+    }
+
+    function filterStudents() {
+        const filters = {
+            amk: document.getElementById('studentFilterAmk')?.value || '',
+            surname: document.getElementById('studentFilterSurname')?.value || '',
+            name: document.getElementById('studentFilterName')?.value || '',
+            father: document.getElementById('studentFilterFather')?.value || '',
+            mother: document.getElementById('studentFilterMother')?.value || '',
+            mail: document.getElementById('studentFilterMail')?.value || '',
+            phone: document.getElementById('studentFilterPhone')?.value || '',
+            specialty: document.getElementById('studentFilterSpecialty')?.value || '',
+            semester: document.getElementById('studentFilterSemester')?.value || '',
+            dept: document.getElementById('studentFilterDept')?.value || '',
+            teams: document.getElementById('studentFilterTeams')?.value || ''
+        };
+        studentsFiltered = studentsFullData.filter(s => {
+            if (!matchesFilter(s.amk, filters.amk)) return false;
+            if (!matchesFilter(s.surname, filters.surname)) return false;
+            if (!matchesFilter(s.name, filters.name)) return false;
+            if (!matchesFilter(s.father_name, filters.father)) return false;
+            if (!matchesFilter(s.mother_name, filters.mother)) return false;
+            if (!matchesFilter(s.mail, filters.mail)) return false;
+            if (!matchesFilter(s.phone, filters.phone)) return false;
+            if (!matchesFilter(s.specialty_name, filters.specialty)) return false;
+            if (!matchesFilter(s.semester, filters.semester)) return false;
+            if (!matchesFilter(s.department, filters.dept)) return false;
+            if (filters.teams) {
+                const teamStr = (s.teams||[]).join(' ');
+                if (!matchesFilter(teamStr, filters.teams)) return false;
+            }
+            return true;
+        });
+        if (sortState.students.order) sortData(studentsFiltered, sortState.students.col, sortState.students.order);
+        renderStudents();
+    }
+
+    // -------------------- COURSES --------------------
     async function loadAllCourses() {
         if (!currentSemesterId) { coursesFullData = []; filterCourses(); return; }
         const data = await api(`/admin/course-units?semester_id=${currentSemesterId}`);
         coursesFullData = data.course_units;
         filterCourses();
     }
-    function renderCourses() { const tbody = document.querySelector('#coursesTable tbody'); tbody.innerHTML = ''; for (const c of coursesFiltered) { const row = tbody.insertRow(); row.dataset.id = c.id; const lessonWithType = `${c.lesson_name} (${c.type_indicator||''})`.trim(); row.innerHTML = `<td class="editable-field lesson_name">${escapeHtml(lessonWithType)}</td><td class="editable-field specialty_name">${escapeHtml(c.specialty_name)}</td><td class="editable-field semester semester-col">${escapeHtml(c.semester)}</td><td class="editable-field department dept-col">${escapeHtml(c.department)}</td><td class="editable-field team team-col">${escapeHtml(c.team||'')}</td><td class="editable-field type_indicator type-col">${escapeHtml(c.type_indicator||'')}</td><td class="editable-field weekly_hours type-col">${escapeHtml(c.weekly_hours ?? '')}</td><td class="editable-field classroom classroom-col">${escapeHtml(c.classroom||'')}</td><td class="actions-col"><button class="edit-btn">✏️</button> <button class="save-btn" style="display:none;">💾</button> <button class="cancel-btn" style="display:none;">↩️</button> <button class="delete-course-btn">🗑️</button></td>`; attachEditHandlers(row, 'course-units', c.id); row.querySelector('.delete-course-btn').onclick = async () => { if (confirm(`Διαγραφή μαθήματος ${c.lesson_name};`)) { try { await api(`/admin/course-units/${c.id}`, { method: 'DELETE' }); await loadAllCourses(); } catch(err) { alert('Σφάλμα διαγραφής: ' + err.message); } } }; } }
-    function filterCourses() { const filters = { name: document.getElementById('courseFilterName').value, specialty: document.getElementById('courseFilterSpecialty').value, semester: document.getElementById('courseFilterSemester').value, dept: document.getElementById('courseFilterDept').value, team: document.getElementById('courseFilterTeam').value, type: document.getElementById('courseFilterType').value, classroom: document.getElementById('courseFilterClassroom').value, weekly_hours: document.getElementById('courseFilterWeeklyHours').value }; coursesFiltered = coursesFullData.filter(c => { const lessonWithType = `${c.lesson_name} (${c.type_indicator||''})`.trim(); if (!matchesFilter(lessonWithType, filters.name)) return false; if (!matchesFilter(c.specialty_name, filters.specialty)) return false; if (!matchesFilter(c.semester, filters.semester)) return false; if (!matchesFilter(c.department, filters.dept)) return false; if (!matchesFilter(c.team, filters.team)) return false; if (!matchesFilter(c.type_indicator, filters.type)) return false; if (!matchesFilter(c.classroom, filters.classroom)) return false; if (!matchesFilter(c.weekly_hours, filters.weekly_hours)) return false; return true; }); if (sortState.courses.order) sortData(coursesFiltered, sortState.courses.col, sortState.courses.order); renderCourses(); }
 
-    // Assignments
+    function renderCourses() {
+        const tbody = document.querySelector('#coursesTable tbody');
+        tbody.innerHTML = '';
+        const prefs = window.userPreferences.courses || { semester: true, team: true, classroom: true };
+        const editMode = window.userPreferences.edit_mode !== false;
+
+        const table = document.getElementById('coursesTable');
+        const headers = table.querySelectorAll('thead th');
+        const filterRow = table.querySelector('thead tr.filter-row');
+        if (headers.length >= 9) {
+            headers[2].classList.toggle('hidden-column', !prefs.semester);
+            headers[4].classList.toggle('hidden-column', !prefs.team);
+            headers[7].classList.toggle('hidden-column', !prefs.classroom);
+            headers[8].classList.toggle('hidden-column', !editMode);
+        }
+        if (filterRow) {
+            const filterCells = filterRow.querySelectorAll('th');
+            if (filterCells.length >= 9) {
+                filterCells[2].classList.toggle('hidden-column', !prefs.semester);
+                filterCells[4].classList.toggle('hidden-column', !prefs.team);
+                filterCells[7].classList.toggle('hidden-column', !prefs.classroom);
+                filterCells[8].classList.toggle('hidden-column', !editMode);
+            }
+        }
+
+        for (const c of coursesFiltered) {
+            const row = tbody.insertRow();
+            row.dataset.id = c.id;
+            const lessonWithType = `${c.lesson_name} (${c.type_indicator||''})`.trim();
+            let html = `<td class="editable-field lesson_name">${escapeHtml(lessonWithType)}</td>`;
+            html += `<td class="editable-field specialty_name">${escapeHtml(c.specialty_name)}</td>`;
+            html += `<td class="editable-field semester semester-col${prefs.semester ? '' : ' hidden-column'}">${escapeHtml(c.semester)}</td>`;
+            html += `<td class="editable-field department dept-col">${escapeHtml(c.department)}</td>`;
+            html += `<td class="editable-field team team-col${prefs.team ? '' : ' hidden-column'}">${escapeHtml(c.team||'')}</td>`;
+            html += `<td class="editable-field type_indicator type-col">${escapeHtml(c.type_indicator||'')}</td>`;
+            html += `<td class="editable-field weekly_hours type-col">${escapeHtml(c.weekly_hours ?? '')}</td>`;
+            html += `<td class="editable-field classroom classroom-col${prefs.classroom ? '' : ' hidden-column'}">${escapeHtml(c.classroom||'')}</td>`;
+            if (editMode) {
+                html += `<td class="actions-col">
+                            <button class="edit-btn">✏️</button>
+                            <button class="save-btn" style="display:none;">💾</button>
+                            <button class="cancel-btn" style="display:none;">↩️</button>
+                            <button class="delete-course-btn">🗑️</button>
+                        </td>`;
+            } else {
+                html += `<td class="actions-col hidden-column"></td>`;
+            }
+            row.innerHTML = html;
+            if (editMode) {
+                attachEditHandlers(row, 'course-units', c.id);
+                row.querySelector('.delete-course-btn').onclick = async () => {
+                    if (confirm(`Διαγραφή μαθήματος ${c.lesson_name};`)) {
+                        try {
+                            await api(`/admin/course-units/${c.id}`, { method: 'DELETE' });
+                            await loadAllCourses();
+                        } catch(err) {
+                            alert('Σφάλμα διαγραφής: ' + err.message);
+                        }
+                    }
+                };
+            }
+        }
+    }
+
+    function filterCourses() {
+        const filters = {
+            name: document.getElementById('courseFilterName')?.value || '',
+            specialty: document.getElementById('courseFilterSpecialty')?.value || '',
+            semester: document.getElementById('courseFilterSemester')?.value || '',
+            dept: document.getElementById('courseFilterDept')?.value || '',
+            team: document.getElementById('courseFilterTeam')?.value || '',
+            type: document.getElementById('courseFilterType')?.value || '',
+            classroom: document.getElementById('courseFilterClassroom')?.value || '',
+            weekly_hours: document.getElementById('courseFilterWeeklyHours')?.value || ''
+        };
+        coursesFiltered = coursesFullData.filter(c => {
+            const lessonWithType = `${c.lesson_name} (${c.type_indicator||''})`.trim();
+            if (!matchesFilter(lessonWithType, filters.name)) return false;
+            if (!matchesFilter(c.specialty_name, filters.specialty)) return false;
+            if (!matchesFilter(c.semester, filters.semester)) return false;
+            if (!matchesFilter(c.department, filters.dept)) return false;
+            if (!matchesFilter(c.team, filters.team)) return false;
+            if (!matchesFilter(c.type_indicator, filters.type)) return false;
+            if (!matchesFilter(c.classroom, filters.classroom)) return false;
+            if (!matchesFilter(c.weekly_hours, filters.weekly_hours)) return false;
+            return true;
+        });
+        if (sortState.courses.order) sortData(coursesFiltered, sortState.courses.col, sortState.courses.order);
+        renderCourses();
+    }
+
+    // -------------------- ASSIGNMENTS --------------------
     async function loadAllAssignments() {
         if (!currentSemesterId) { assignmentsFullData = []; filterAssignments(); return; }
         const data = await api(`/admin/assignments?semester_id=${currentSemesterId}`);
         assignmentsFullData = data.assignments;
         filterAssignments();
     }
-    function renderAssignments() { const tbody = document.querySelector('#assignmentsTable tbody'); tbody.innerHTML = ''; for (const a of assignmentsFiltered) { const row = tbody.insertRow(); row.dataset.teacherId = a.teacher_id; row.dataset.courseId = a.course_unit_id; row.innerHTML = `<td class="lesson-cell editable-field lesson_with_type">${escapeHtml(a.lesson_with_type)}</td><td class="teacher-cell editable-field teacher_name">${escapeHtml(a.teacher_name)}</td><td class="specialty-cell">${escapeHtml(a.specialty_name)}</td><td class="dept-cell dept-col">${escapeHtml(a.department)}</td><td class="team-cell team-col">${escapeHtml(a.team||'')}</td><td class="weekly-hours-col">${escapeHtml(a.weekly_hours||'')}</td><td class="actions-col"><button class="edit-btn">✏️</button> <button class="save-btn" style="display:none;">💾</button> <button class="cancel-btn" style="display:none;">↩️</button> <button class="delete-assignment-btn">🗑️</button></td>`; attachEditHandlers(row, 'assignments', null, { teacher_id: a.teacher_id, course_unit_id: a.course_unit_id }); row.querySelector('.delete-assignment-btn').onclick = async () => { if (confirm('Διαγραφή ανάθεσης;')) { await api('/admin/assignments', { method: 'DELETE', body: JSON.stringify({ teacher_id: a.teacher_id, course_unit_id: a.course_unit_id }) }); await loadAllAssignments(); } }; } }
-    function filterAssignments() { const filters = { lesson: document.getElementById('filterLesson').value, teacher: document.getElementById('filterTeacher').value, specialty: document.getElementById('filterSpecialty').value, dept: document.getElementById('filterDept').value, team: document.getElementById('filterTeam').value, weekly_hours: document.getElementById('filterWeeklyHours').value }; assignmentsFiltered = assignmentsFullData.filter(a => { if (!matchesFilter(a.lesson_with_type, filters.lesson)) return false; if (!matchesFilter(a.teacher_name, filters.teacher)) return false; if (!matchesFilter(a.specialty_name, filters.specialty)) return false; if (!matchesFilter(a.department, filters.dept)) return false; if (!matchesFilter(a.team, filters.team)) return false; if (!matchesFilter(a.weekly_hours, filters.weekly_hours)) return false; return true; }); if (sortState.assignments.order) sortData(assignmentsFiltered, sortState.assignments.col, sortState.assignments.order); renderAssignments(); }
 
+    function renderAssignments() {
+        const table = document.getElementById('assignmentsTable');
+        const thead = table.querySelector('thead');
+        const tbody = table.querySelector('tbody');
+        const editMode = window.userPreferences.edit_mode !== false;
+
+        // Ενημέρωση ορατότητας της στήλης "Ενέργειες"
+        const headers = thead.querySelectorAll('th');
+        if (headers.length >= 7) { // η στήλη Ενέργειες είναι η 7η (δείκτης 6)
+            headers[6].classList.toggle('hidden-column', !editMode);
+        }
+        // Η γραμμή φίλτρων είναι η 2η σειρά του thead
+        const filterRow = thead.querySelector('tr.filter-row');
+        if (filterRow) {
+            const filterCells = filterRow.querySelectorAll('th');
+            if (filterCells.length >= 7) {
+                filterCells[6].classList.toggle('hidden-column', !editMode);
+            }
+        }
+
+        tbody.innerHTML = '';
+        for (const a of assignmentsFiltered) {
+            const row = tbody.insertRow();
+            row.dataset.teacherId = a.teacher_id;
+            row.dataset.courseId = a.course_unit_id;
+            let html = `<td class="lesson-cell editable-field lesson_with_type">${escapeHtml(a.lesson_with_type)}</td>
+                        <td class="teacher-cell editable-field teacher_name">${escapeHtml(a.teacher_name)}</td>
+                        <td class="specialty-cell">${escapeHtml(a.specialty_name)}</td>
+                        <td class="dept-cell dept-col">${escapeHtml(a.department)}</td>
+                        <td class="team-cell team-col">${escapeHtml(a.team||'')}</td>
+                        <td class="weekly-hours-col">${escapeHtml(a.weekly_hours||'')}</td>`;
+            if (editMode) {
+                html += `<td class="actions-col">
+                            <button class="edit-btn">✏️</button>
+                            <button class="save-btn" style="display:none;">💾</button>
+                            <button class="cancel-btn" style="display:none;">↩️</button>
+                            <button class="delete-assignment-btn">🗑️</button>
+                        </td>`;
+            } else {
+                html += `<td class="actions-col hidden-column"></td>`;
+            }
+            row.innerHTML = html;
+            if (editMode) {
+                attachEditHandlers(row, 'assignments', null, { teacher_id: a.teacher_id, course_unit_id: a.course_unit_id });
+                row.querySelector('.delete-assignment-btn').onclick = async () => {
+                    if (confirm('Διαγραφή ανάθεσης;')) {
+                        await api('/admin/assignments', { method: 'DELETE', body: JSON.stringify({ teacher_id: a.teacher_id, course_unit_id: a.course_unit_id }) });
+                        await loadAllAssignments();
+                    }
+                };
+            }
+        }
+    }
+
+    function filterAssignments() {
+        const filters = {
+            lesson: document.getElementById('filterLesson')?.value || '',
+            teacher: document.getElementById('filterTeacher')?.value || '',
+            specialty: document.getElementById('filterSpecialty')?.value || '',
+            dept: document.getElementById('filterDept')?.value || '',
+            team: document.getElementById('filterTeam')?.value || '',
+            weekly_hours: document.getElementById('filterWeeklyHours')?.value || ''
+        };
+        assignmentsFiltered = assignmentsFullData.filter(a => {
+            if (!matchesFilter(a.lesson_with_type, filters.lesson)) return false;
+            if (!matchesFilter(a.teacher_name, filters.teacher)) return false;
+            if (!matchesFilter(a.specialty_name, filters.specialty)) return false;
+            if (!matchesFilter(a.department, filters.dept)) return false;
+            if (!matchesFilter(a.team, filters.team)) return false;
+            if (!matchesFilter(String(a.weekly_hours), filters.weekly_hours)) return false;
+            return true;
+        });
+        if (sortState.assignments.order) sortData(assignmentsFiltered, sortState.assignments.col, sortState.assignments.order);
+        renderAssignments();
+    }
+
+    // -------------------- ABSENCES --------------------
     async function loadAbsences(specialty_semester) {
         try {
             let url = '/admin/absences-overview';
@@ -549,7 +940,7 @@
                 const first = absencesSpecialtySemesterList[0].value;
                 select.value = first;
                 await loadAbsences(first);
-                return; // <-- ΠΡΟΣΘΗΚΗ: σταματάμε εδώ για να μην καλέσουμε filterAbsences με κενά δεδομένα
+                return;
             }
             filterAbsences();
         } catch(err) {
@@ -563,30 +954,47 @@
         renderAbsencesTable();
     }
 
+    let absencesSortState = { col: null, order: null };
+
     function renderAbsencesTable() {
         const headerRow = document.getElementById('absencesTableHead');
         const tbody = document.getElementById('absencesTableBody');
         headerRow.innerHTML = '';
-        // Σταθερές στήλες (χωρίς sorting)
-        let th1 = document.createElement('th'); th1.textContent = 'ΑΜΚ'; headerRow.appendChild(th1);
-        let th2 = document.createElement('th'); th2.textContent = 'Επώνυμο'; headerRow.appendChild(th2);
-        let th3 = document.createElement('th'); th3.textContent = 'Όνομα'; headerRow.appendChild(th3);
-        let th4 = document.createElement('th'); th4.textContent = 'Ειδικότ./Τμήμα'; headerRow.appendChild(th4);
-        // Δυναμικές στήλες μαθημάτων με sorting
+
+        const prefs = window.userPreferences.absences || { amk: true, course_names: true };
+        const editMode = window.userPreferences.edit_mode !== false;
+
+        // Σταθερές στήλες
+        if (prefs.amk) {
+            let th = document.createElement('th');
+            th.textContent = 'ΑΜΚ';
+            headerRow.appendChild(th);
+        }
+        let th2 = document.createElement('th');
+        th2.textContent = 'Επώνυμο';
+        headerRow.appendChild(th2);
+        let th3 = document.createElement('th');
+        th3.textContent = 'Όνομα';
+        headerRow.appendChild(th3);
+        let th4 = document.createElement('th');
+        th4.textContent = 'Ειδικότ./Τμήμα';
+        headerRow.appendChild(th4);
+
+        // Δυναμικές στήλες μαθημάτων
         absencesCourses.forEach((course, index) => {
             let th = document.createElement('th');
-            th.textContent = course;
+            th.textContent = prefs.course_names ? course : (index + 1);
             th.style.cursor = 'pointer';
-            th.setAttribute('data-col', index); // αποθήκευση της θέσης της στήλης
+            th.setAttribute('data-col', index);
             th.innerHTML += ' <span class="sort-arrow"></span>';
             th.onclick = () => sortAbsencesTable(index);
             headerRow.appendChild(th);
         });
-        // Γέμισμα σώματος
+
         tbody.innerHTML = '';
         absencesStudents.forEach(student => {
             const row = tbody.insertRow();
-            row.insertCell().textContent = student.amk || '';
+            if (prefs.amk) row.insertCell().textContent = student.amk || '';
             row.insertCell().textContent = student.surname || '';
             row.insertCell().textContent = student.name || '';
             row.insertCell().textContent = student.specialty_dept || '';
@@ -600,41 +1008,38 @@
                 cell.textContent = `${data.absent}/${data.total}`;
                 cell.className = `absence-cell ${cellClass}`;
                 cell.title = course;
-                cell.dataset.fraction = fraction; // για εύκολη πρόσβαση κατά το sorting
+                cell.dataset.fraction = fraction;
             });
         });
     }
 
-    let absencesSortState = { col: null, order: null };
-
     function sortAbsencesTable(colIndex) {
         const tbody = document.getElementById('absencesTableBody');
         const rows = Array.from(tbody.rows);
-        // Εναλλαγή σειράς ταξινόμησης
         let order = 'asc';
         if (absencesSortState.col === colIndex) {
             if (absencesSortState.order === 'asc') order = 'desc';
             else if (absencesSortState.order === 'desc') order = null;
             else order = 'asc';
         }
-        // Καθαρισμός βελών
         document.querySelectorAll('#absencesTableHead th .sort-arrow').forEach(span => span.textContent = '');
         if (order) {
             const arrow = order === 'asc' ? '▲' : '▼';
             const headerRow = document.getElementById('absencesTableHead');
-            const th = headerRow.children[colIndex + 4]; // +4 για τις σταθερές στήλες
+            let offset = 4;
+            if (!window.userPreferences.absences?.amk) offset = 3;
+            const th = headerRow.children[colIndex + offset];
             if (th) th.querySelector('.sort-arrow').textContent = arrow;
             absencesSortState = { col: colIndex, order };
             rows.sort((a, b) => {
-                const aCell = a.cells[colIndex + 4];
-                const bCell = b.cells[colIndex + 4];
+                const aCell = a.cells[colIndex + offset];
+                const bCell = b.cells[colIndex + offset];
                 const aVal = parseFloat(aCell.dataset.fraction) || 0;
                 const bVal = parseFloat(bCell.dataset.fraction) || 0;
                 return order === 'asc' ? aVal - bVal : bVal - aVal;
             });
         } else {
             absencesSortState = { col: null, order: null };
-            // Επαναφορά στην αρχική σειρά (όπως επιστρέφεται από το backend)
             rows.sort((a, b) => {
                 const aName = a.cells[1]?.textContent || '';
                 const bName = b.cells[1]?.textContent || '';
@@ -644,26 +1049,7 @@
         rows.forEach(row => tbody.appendChild(row));
     }
 
-    // Sorting για στήλες μαθημάτων
-    function sortAbsencesTableByCourse(courseName) {
-        const courseIndex = absencesCourses.indexOf(courseName) + 4; // +4 για τις πρώτες στήλες
-        const tbody = document.getElementById('absencesTableBody');
-        const rows = Array.from(tbody.rows);
-        
-        rows.sort((a, b) => {
-            const aCell = a.cells[courseIndex];
-            const bCell = b.cells[courseIndex];
-            const aVal = parseFloat(aCell.getAttribute('data-sort-value') || aCell.textContent.split('/')[0] / (aCell.textContent.split('/')[1] || 1));
-            const bVal = parseFloat(bCell.getAttribute('data-sort-value') || bCell.textContent.split('/')[0] / (bCell.textContent.split('/')[1] || 1));
-            return aVal - bVal;
-        });
-        
-        // Αναδιάταξη
-        rows.forEach(row => tbody.appendChild(row));
-    }
-    
-    // Sorting & filters (generic)
-
+    // -------------------- GENERIC SORT --------------------
     function sortData(arr, col, order) { if (!order) return; const dataType = (col==='id'||col==='teacher_id'||col==='course_unit_id')?'number':'string'; arr.sort((a,b)=>{ let aVal = a[col]!==undefined ? a[col] : '', bVal = b[col]!==undefined ? b[col] : ''; if (dataType==='number') { aVal=Number(aVal); bVal=Number(bVal); return order==='asc' ? aVal-bVal : bVal-aVal; } else { aVal=String(aVal).toLowerCase(); bVal=String(bVal).toLowerCase(); if(order==='asc') return aVal<bVal ? -1 : aVal>bVal ? 1 : 0; else return aVal>bVal ? -1 : aVal<bVal ? 1 : 0; } }); }
 
     function attachSortingForTable(tableId, dataArrayGetter, filterFunction, stateKey) {
@@ -695,29 +1081,64 @@
     }
 
     function setupFilters(tableType) {
+        // Αφαίρεση παλιών listeners (προαιρετικά, αλλά βοηθά)
+        // Θα χρησιμοποιήσουμε event delegation, οπότε δεν χρειάζεται να αφαιρούμε
+
         if (tableType === 'teachers') {
-            ['teacherFilterSurname','teacherFilterName','teacherFilterMail','teacherFilterPhone'].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>filterTeachers()));
-            attachSortingForTable('teachersTable',()=>teachersFiltered,filterTeachers,'teachers');
+            const table = document.getElementById('teachersTable');
+            // Αφαίρεση παλιού listener αν υπάρχει
+            table.removeEventListener('input', filterTeachersHandler);
+            table.addEventListener('input', filterTeachersHandler);
+            attachSortingForTable('teachersTable', () => teachersFiltered, filterTeachers, 'teachers');
         } else if (tableType === 'students') {
-            ['studentFilterAmk','studentFilterSurname','studentFilterName','studentFilterFather','studentFilterMother','studentFilterMail','studentFilterPhone','studentFilterSpecialty','studentFilterSemester','studentFilterDept','studentFilterTeams'].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>filterStudents()));
-            attachSortingForTable('studentsTable',()=>studentsFiltered,filterStudents,'students');
+            const table = document.getElementById('studentsTable');
+            table.removeEventListener('input', filterStudentsHandler);
+            table.addEventListener('input', filterStudentsHandler);
+            attachSortingForTable('studentsTable', () => studentsFiltered, filterStudents, 'students');
         } else if (tableType === 'courses') {
-            ['courseFilterName','courseFilterSpecialty','courseFilterSemester','courseFilterDept','courseFilterTeam','courseFilterType','courseFilterClassroom'].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>filterCourses()));
-            attachSortingForTable('coursesTable',()=>coursesFiltered,filterCourses,'courses');
+            const table = document.getElementById('coursesTable');
+            table.removeEventListener('input', filterCoursesHandler);
+            table.addEventListener('input', filterCoursesHandler);
+            attachSortingForTable('coursesTable', () => coursesFiltered, filterCourses, 'courses');
         } else if (tableType === 'assignments') {
-            ['filterLesson','filterTeacher','filterSpecialty','filterDept','filterTeam'].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>filterAssignments()));
-            attachSortingForTable('assignmentsTable',()=>assignmentsFiltered,filterAssignments,'assignments');
-        } else if (tableType === 'absences') {
-            // Δεν χρειάζεται attachSortingForTable γιατί η ταξινόμηση γίνεται με το sortAbsencesTableByCourse
+            const table = document.getElementById('assignmentsTable');
+            table.removeEventListener('input', filterAssignmentsHandler);
+            table.addEventListener('input', filterAssignmentsHandler);
+            attachSortingForTable('assignmentsTable', () => assignmentsFiltered, filterAssignments, 'assignments');
         }
     }
 
+    // Handlers για event delegation
+    function filterTeachersHandler(e) {
+        if (e.target.tagName === 'INPUT') {
+            filterTeachers();
+        }
+    }
+    function filterStudentsHandler(e) {
+        if (e.target.tagName === 'INPUT') {
+            filterStudents();
+        }
+    }
+    function filterCoursesHandler(e) {
+        if (e.target.tagName === 'INPUT') {
+            filterCourses();
+        }
+    }
+    function filterAssignmentsHandler(e) {
+        if (e.target.tagName === 'INPUT') {
+            filterAssignments();
+        }
+    }
+
+    // ---------- ATTACH EDIT HANDLERS ----------
     function attachEditHandlers(row, entityType, id, extraIds = null) {
-        const editBtn = row.querySelector('.edit-btn'),
-            saveBtn = row.querySelector('.save-btn'),
-            cancelBtn = row.querySelector('.cancel-btn'),
-            editableCells = row.querySelectorAll('.editable-field');
+        const editBtn = row.querySelector('.edit-btn');
+        const saveBtn = row.querySelector('.save-btn');
+        const cancelBtn = row.querySelector('.cancel-btn');
+        const editableCells = row.querySelectorAll('.editable-field');
         let originalTeacherId, originalCourseId;
+
+        if (!editBtn || !saveBtn || !cancelBtn) return;
 
         if (entityType === 'assignments') {
             originalTeacherId = row.dataset.teacherId;
@@ -890,8 +1311,7 @@
         };
     }
 
-    // Settings and add buttons
-
+    // ---------- CRUD MODALS ----------
     function getFriendlyErrorMessage(error, context) {
         let msg = error.message || String(error);
         if (msg.includes('already exists') || msg.includes('Duplicate entry')) {
@@ -899,7 +1319,7 @@
                 return 'Ο εκπαιδευτής με αυτό το email υπάρχει ήδη στο τρέχον εξάμηνο.';
             }
             if (context === 'course') {
-                return 'Το μάθημα υπάρχει ήδη με τα ίδια χαρακτηριστικά (ειδικότητα, τμήμα, ομάδα, τύπος).';
+                return 'Το μάθημα υπάρχει ήδη με τα ίδια χαρακτηριστικά (ειδικότητα, τμήμα, ομάδα, είδος).';
             }
             if (context === 'assignment') {
                 return 'Η ανάθεση υπάρχει ήδη.';
@@ -911,14 +1331,12 @@
         if (msg.includes('not found')) {
             return 'Το στοιχείο δεν βρέθηκε. Ελέγξτε την επιλογή σας.';
         }        
-        // Επιστροφή του αρχικού μηνύματος αν δεν ταιριάζει με κάποιο
         return msg;
     }
 
     // Add teacher
     document.getElementById('addTeacherBtn').onclick = () => {
         document.getElementById('addTeacherModal').style.display = 'flex';
-        // Καθαρισμός τυχόν προηγούμενων μηνυμάτων σφάλματος
     };
     document.getElementById('cancelAddTeacherBtn').onclick = () => {
         document.getElementById('addTeacherModal').style.display = 'none';
@@ -928,25 +1346,20 @@
         const name = document.getElementById('newTeacherName').value.trim();
         const mail = document.getElementById('newTeacherMail').value.trim();
         const phone = document.getElementById('newTeacherPhone').value.trim();
-        
         if (!surname || !name || !mail) {
             alert('Συμπληρώστε Επώνυμο, Όνομα και Email.');
             return;
         }
-        
-        // Απενεργοποίηση του κουμπιού για να μην γίνει διπλή υποβολή
         const btn = document.getElementById('confirmAddTeacherBtn');
         const originalText = btn.textContent;
         btn.disabled = true;
         btn.textContent = 'Αποθήκευση...';
-        
         try {
             await api('/admin/teachers', {
                 method: 'POST',
                 body: JSON.stringify({ surname, name, mail, phone })
             });
             await loadAllTeachers();
-            // Κλείσιμο modal και καθαρισμός πεδίων
             document.getElementById('addTeacherModal').style.display = 'none';
             document.getElementById('newTeacherSurname').value = '';
             document.getElementById('newTeacherName').value = '';
@@ -954,10 +1367,8 @@
             document.getElementById('newTeacherPhone').value = '';
             alert('✅ Ο εκπαιδευτής προστέθηκε επιτυχώς!');
         } catch(err) {
-            const friendlyMsg = getFriendlyErrorMessage(err, 'teacher');
-            alert('❌ ' + friendlyMsg);
+            alert('❌ ' + getFriendlyErrorMessage(err, 'teacher'));
         } finally {
-            // Επαναφορά κουμπιού
             btn.disabled = false;
             btn.textContent = originalText;
         }
@@ -979,17 +1390,14 @@
         const type_indicator = document.getElementById('newCourseType').value;
         const weekly_hours = parseInt(document.getElementById('newCourseWeeklyHours').value) || 1;
         const classroom = document.getElementById('newCourseClassroom').value.trim();
-        
         if (!lesson_name || !specialty_name || !semester || !department) {
             alert('Συμπληρώστε τα υποχρεωτικά πεδία (Μάθημα, Ειδικότητα, Εξάμηνο, Τμήμα).');
             return;
         }
-        
         const btn = document.getElementById('confirmAddCourseBtn');
         const originalText = btn.textContent;
         btn.disabled = true;
         btn.textContent = 'Αποθήκευση...';
-        
         try {
             await api('/admin/course-units', {
                 method: 'POST',
@@ -1015,8 +1423,7 @@
             document.getElementById('newCourseClassroom').value = '';
             alert('✅ Το μάθημα προστέθηκε επιτυχώς!');
         } catch(err) {
-            const friendlyMsg = getFriendlyErrorMessage(err, 'course');
-            alert('❌ ' + friendlyMsg);
+            alert('❌ ' + getFriendlyErrorMessage(err, 'course'));
         } finally {
             btn.disabled = false;
             btn.textContent = originalText;
@@ -1030,10 +1437,8 @@
                 api('/admin/teachers'),
                 api('/admin/course-units')
             ]);
-            
             const teacherSelect = document.getElementById('modalTeacherSelect');
             const courseSelect = document.getElementById('modalCourseSelect');
-            
             teacherSelect.innerHTML = '<option value="">-- Εκπαιδευτής --</option>';
             (teachers.teachers || []).forEach(t => {
                 const opt = document.createElement('option');
@@ -1041,7 +1446,6 @@
                 opt.textContent = `${t.surname} ${t.name}`;
                 teacherSelect.appendChild(opt);
             });
-            
             courseSelect.innerHTML = '<option value="">-- Μάθημα --</option>';
             (courses.course_units || []).forEach(c => {
                 const opt = document.createElement('option');
@@ -1049,7 +1453,6 @@
                 opt.textContent = `${c.lesson_name} (${c.specialty_name})`;
                 courseSelect.appendChild(opt);
             });
-            
             document.getElementById('addAssignmentModal').style.display = 'flex';
         } catch(err) {
             alert('❌ Σφάλμα φόρτωσης δεδομένων: ' + getFriendlyErrorMessage(err, 'assignment'));
@@ -1063,17 +1466,14 @@
     document.getElementById('confirmAddAssignmentBtn').onclick = async () => {
         const teacherId = document.getElementById('modalTeacherSelect').value;
         const courseId = document.getElementById('modalCourseSelect').value;
-        
         if (!teacherId || !courseId) {
             alert('Επιλέξτε εκπαιδευτή και μάθημα.');
             return;
         }
-        
         const btn = document.getElementById('confirmAddAssignmentBtn');
         const originalText = btn.textContent;
         btn.disabled = true;
         btn.textContent = 'Αποθήκευση...';
-        
         try {
             await api('/admin/assignments', {
                 method: 'POST',
@@ -1086,15 +1486,14 @@
             document.getElementById('addAssignmentModal').style.display = 'none';
             alert('✅ Η ανάθεση προστέθηκε επιτυχώς!');
         } catch(err) {
-            const friendlyMsg = getFriendlyErrorMessage(err, 'assignment');
-            alert('❌ ' + friendlyMsg);
+            alert('❌ ' + getFriendlyErrorMessage(err, 'assignment'));
         } finally {
             btn.disabled = false;
             btn.textContent = originalText;
         }
     };
 
-    // Email logic
+    // ---------- EMAIL LOGIC ----------
     const emailModal = document.getElementById('emailModal');
     const emailSubject = document.getElementById('emailSubject');
     const emailMessage = document.getElementById('emailMessage');
@@ -1274,7 +1673,7 @@
         loadAbsences(e.target.value);
     });
 
-    // Tab switching για την κύρια εφαρμογή (μόνο για τα tab-buttons εκτός modal)
+    // Tab switching για την κύρια εφαρμογή
     document.querySelectorAll('.tab-buttons .tab-btn').forEach(btn => {
         btn.onclick = async () => {
             if (settingsModal.style.display === 'flex') return;
@@ -1294,88 +1693,162 @@
         };
     });
 
-    // Initial load
-    async function initialLoad() {
-        await loadSemesters();
-        // Ενεργοποίηση σωστής καρτέλας
-        document.querySelectorAll('.tab-buttons .tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === currentTab);
-        });
-        document.querySelectorAll('.tab-pane').forEach(pane => {
-            pane.classList.toggle('active', pane.id === currentTab + 'Tab');
-        });
-        setupFilters(currentTab);
-        // Φόρτωση δεδομένων για την τρέχουσα καρτέλα
-        if (currentTab === 'teachers') await loadAllTeachers();
-        else if (currentTab === 'students') await loadAllStudents();
-        else if (currentTab === 'courses') await loadAllCourses();
-        else if (currentTab === 'assignments') await loadAllAssignments();
-        else if (currentTab === 'absences') await loadAbsences(document.getElementById('absencesSpecialtySelect').value);
+    // ============================================================
+    // APPEARANCE PREFERENCES
+    // ============================================================
+    async function loadPreferences() {
+        console.log('🔵 loadPreferences started');
+        try {
+            let data = await api('/admin/preferences');
+            console.log('📦 Raw data type:', typeof data);
+            // Αν είναι string, κάνε parse
+            if (typeof data === 'string') {
+                try {
+                    data = JSON.parse(data);
+                    console.log('📦 Parsed from string');
+                } catch(e) {
+                    console.error('JSON parse error:', e);
+                    throw new Error('Invalid JSON response');
+                }
+            }
+            // Αν είναι πίνακας με ένα αντικείμενο, πάρε το αντικείμενο
+            if (Array.isArray(data) && data.length === 1 && typeof data[0] === 'object' && !Array.isArray(data[0])) {
+                data = data[0];
+                console.log('📦 Extracted object from array');
+            }
+            // Αν δεν είναι object, πάρε default
+            if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                console.warn('⚠️ Data is not an object, using defaults');
+                const defaults = {
+                    teachers: { email: true, phone: true },
+                    students: { amk: true, father_name: true, mother_name: true, email: true, phone: true, specialty: true, semester: true, department: true, team: true },
+                    courses: { semester: true, team: true, classroom: true },
+                    assignments: { actions: true },
+                    absences: { amk: true, course_names: true },
+                    edit_mode: true
+                };
+                data = defaults;
+            }
+            userPreferences = data;
+            window.userPreferences = data;
+            applyPreferencesToUI(data);
+            console.log('✅ Preferences loaded and applied');
+            return data;
+        } catch(err) {
+            console.error('❌ loadPreferences error:', err);
+            const defaults = {
+                teachers: { email: true, phone: true },
+                students: { amk: true, father_name: true, mother_name: true, email: true, phone: true, specialty: true, semester: true, department: true, team: true },
+                courses: { semester: true, team: true, classroom: true },
+                absences: { amk: true, course_names: true },
+                edit_mode: true
+            };
+            userPreferences = defaults;
+            window.userPreferences = defaults;
+            applyPreferencesToUI(defaults);
+            showSettingsMsg('appearanceMsg', 'Σφάλμα φόρτωσης προτιμήσεων, χρησιμοποιούνται default ρυθμίσεις', 'error');
+            return defaults;
+        }
     }
 
+    function applyPreferencesToUI(prefs) {
+        document.querySelectorAll('#settings-appearanceTab input[type="checkbox"]').forEach(cb => {
+            const section = cb.dataset.section;
+            const field = cb.dataset.field;
+            if (section && field) {
+                cb.checked = prefs[section]?.[field] ?? true;
+            }
+        });
+        const editSwitch = document.getElementById('editModeSwitch');
+        if (editSwitch) editSwitch.checked = prefs.edit_mode !== false;
+    }
 
-    setTimeout(() => {
-        fetch('/admin/settings', {credentials: 'include'})
-            .then(r => r.json())
-            .then(data => {
-                if (data.unit_name) {
-                    document.title = `Γραμματεία ${data.unit_name}`;
-                } else {
-                    document.title = 'Γραμματεία ΣΑΕΚ';
-                }
-            })
-            .catch(e => console.warn(e));
-    }, 200);
+    function applyPreferencesToCurrentTab() {
+        if (currentTab === 'teachers') {
+            filterTeachers();
+            setTimeout(() => setupFilters('teachers'), 50);
+        } else if (currentTab === 'students') {
+            filterStudents();
+            setTimeout(() => setupFilters('students'), 50);
+        } else if (currentTab === 'courses') {
+            filterCourses();
+            setTimeout(() => setupFilters('courses'), 50);
+        } else if (currentTab === 'assignments') {
+            filterAssignments();
+            setTimeout(() => setupFilters('assignments'), 50);
+        } else if (currentTab === 'absences') {
+            renderAbsencesTable();
+        }
+    }
+
+    document.getElementById('saveAppearanceBtn').onclick = async () => {
+        const preferences = {
+            teachers: {},
+            students: {},
+            courses: {},
+            absences: {},
+            edit_mode: document.getElementById('editModeSwitch').checked
+        };
+        document.querySelectorAll('#settings-appearanceTab input[type="checkbox"]').forEach(cb => {
+            const section = cb.dataset.section;
+            const field = cb.dataset.field;
+            if (section && field) {
+                if (!preferences[section]) preferences[section] = {};
+                preferences[section][field] = cb.checked;
+            }
+        });
+        try {
+            await api('/admin/preferences', {
+                method: 'PUT',
+                body: JSON.stringify(preferences)
+            });
+            userPreferences = preferences;
+            window.userPreferences = preferences;
+            showSettingsMsg('appearanceMsg', '✅ Οι προτιμήσεις αποθηκεύτηκαν!', 'success');
+            applyPreferencesToCurrentTab();
+        } catch(err) {
+            showSettingsMsg('appearanceMsg', '❌ Σφάλμα αποθήκευσης: ' + err.message, 'error');
+        }
+    };
 
     // ============================================================
     // SETTINGS MODAL LOGIC
     // ============================================================
 
-    // DOM elements for settings (με prefix "settings-")
     const settingsModal = document.getElementById('settingsModal');
     const closeSettingsBtns = document.querySelectorAll('#closeSettingsBtn, #closeSettingsBtnBottom');
 
-    // Άνοιγμα modal
-    document.getElementById('settingsBtn').onclick = () => {
+    document.getElementById('settingsBtn').onclick = async () => {
         settingsModal.style.display = 'flex';
-        // Φόρτωση της αποθηκευμένης καρτέλας (ή 'signature' αν δεν υπάρχει)
         const savedTab = localStorage.getItem('settingsActiveTab') || 'signature';
         settingsActiveTab = savedTab;
-        
-        // Ενεργοποίηση του σωστού tab και pane
         document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('#settingsModal .tab-pane').forEach(pane => pane.classList.remove('active'));
-        
         const activeBtn = document.querySelector(`.settings-tab-btn[data-settings-tab="${savedTab}"]`);
         if (activeBtn) activeBtn.classList.add('active');
-        
         const activePane = document.getElementById('settings-' + savedTab + 'Tab');
         if (activePane) activePane.classList.add('active');
-        
-        // Φόρτωση δεδομένων ανάλογα με την καρτέλα
         if (savedTab === 'senders') loadSettingsSenders();
         if (savedTab === 'admins') loadSettingsAdmins();
         if (savedTab === 'semesters') loadSettingsSemesters();
-        
-        // Πάντα φόρτωση των γενικών ρυθμίσεων (υπογραφή, κ.λπ.)
+        if (savedTab === 'appearance') {
+            await loadPreferences();
+        }
         loadSettingsData();
     };
 
-    // Κλείσιμο modal
     closeSettingsBtns.forEach(btn => {
         btn.onclick = () => {
             settingsModal.style.display = 'none';
         };
     });
 
-    // Κλείσιμο modal όταν πατάμε έξω από το περιεχόμενο
     settingsModal.addEventListener('click', (e) => {
         if (e.target === settingsModal) {
             settingsModal.style.display = 'none';
         }
     });
 
-    // Προσθήκη event listener για logout
     document.getElementById('logoutBtn').addEventListener('click', async () => {
         try {
             await fetch('/auth/logout', {
@@ -1389,7 +1862,6 @@
         }
     });
 
-    // Κλείσιμο modal όταν πατάμε αλλού
     document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
         btn.addEventListener('click', () => {
             settingsModal.style.display = 'none';
@@ -1397,11 +1869,11 @@
     });
 
     document.querySelectorAll('.settings-tab-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const tab = btn.dataset.settingsTab;
             if (!tab) return;
-            localStorage.setItem('settingsActiveTab', tab);   // <-- ΑΠΟΘΗΚΕΥΣΗ
+            localStorage.setItem('settingsActiveTab', tab);
             document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             document.querySelectorAll('#settingsModal .tab-pane').forEach(pane => pane.classList.remove('active'));
@@ -1411,6 +1883,13 @@
                 if (tab === 'senders') loadSettingsSenders();
                 if (tab === 'admins') loadSettingsAdmins();
                 if (tab === 'semesters') loadSettingsSemesters();
+                if (tab === 'appearance') {
+                    if (Object.keys(window.userPreferences).length > 0) {
+                        applyPreferencesToUI(window.userPreferences);
+                    } else {
+                        await loadPreferences();
+                    }
+                }
             } else {
                 console.warn('Tab pane not found for:', tab);
             }
@@ -1480,7 +1959,6 @@
         try {
             await api('/admin/settings/unit-name', { method: 'PUT', body: JSON.stringify({ unit_name }) });
             showSettingsMsg('settings-unitNameMsg', 'Η ονομασία αποθηκεύτηκε', 'success');
-            // Ενημέρωση τίτλου σελίδας
             document.title = `Γραμματεία ${unit_name}`;
         } catch(err) { showSettingsMsg('settings-unitNameMsg', err.message, 'error'); }
     };
@@ -1774,7 +2252,6 @@
             document.getElementById('settings-newSemesterStart').value = '';
             document.getElementById('settings-newSemesterEnd').value = '';
             loadSettingsSemesters();
-            // Ενημέρωση dropdown
             await loadSemesters();
         } catch(err) { showSettingsMsg('settings-semesterMsg', err.message, 'error'); }
     };
@@ -1793,7 +2270,6 @@
             loadSettingsSemesters();
             document.getElementById('settings-editSemesterModal').style.display = 'none';
             showSettingsMsg('settings-semesterMsg', 'Εξάμηνο ενημερώθηκε', 'success');
-            // Ενημέρωση dropdown
             await loadSemesters();
         } catch(err) { showSettingsMsg('settings-semesterMsg', err.message, 'error'); }
     };
@@ -1802,7 +2278,7 @@
     };
 
     // ============================================================
-    // CSV UPLOAD FUNCTIONS (νέα λειτουργία)
+    // CSV UPLOAD FUNCTIONS
     // ============================================================
     async function uploadCSV(endpoint, fileInputId, msgDivId) {
         const fileInput = document.getElementById(fileInputId);
@@ -1830,7 +2306,6 @@
             if (res.ok) {
                 showSettingsMsg(msgDivId, '✅ ' + (result.message || 'Εισαγωγή επιτυχής!'), 'success');
                 fileInput.value = '';
-                // Ανανέωση των tabs ανάλογα με το τι εισήχθη
                 if (endpoint === '/admin/import-teachers') {
                     await loadAllTeachers();
                 } else if (endpoint === '/admin/import-classes') {
@@ -1840,7 +2315,7 @@
                     await loadAllStudents();
                 }
             } else {
-                showSettingsMsg(msgDivId, '❌ ' + (result.detail || 'Σφάλμα κατά την εισαγωγή.'), 'error')
+                showSettingsMsg(msgDivId, '❌ ' + (result.detail || 'Σφάλμα κατά την εισαγωγή.'), 'error');
             }
         } catch (err) {
             showSettingsMsg(msgDivId, '❌ Σφάλμα δικτύου: ' + err.message, 'error');
@@ -1850,7 +2325,6 @@
         }
     }
 
-    // Event listeners για τα κουμπιά upload
     document.getElementById('uploadTeachersBtn').addEventListener('click', () => {
         uploadCSV('/admin/import-teachers', 'csvTeachers', 'csvTeachersMsg');
     });
@@ -1860,6 +2334,27 @@
     document.getElementById('uploadStudentsBtn').addEventListener('click', () => {
         uploadCSV('/admin/import-students', 'csvStudents', 'csvStudentsMsg');
     });
+
+    // ============================================================
+    // INITIAL LOAD
+    // ============================================================
+    async function initialLoad() {
+        await loadSemesters(true);
+        await loadPreferences();
+        document.querySelectorAll('.tab-buttons .tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === currentTab);
+        });
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.toggle('active', pane.id === currentTab + 'Tab');
+        });
+        if (currentTab === 'teachers') await loadAllTeachers();
+        else if (currentTab === 'students') await loadAllStudents();
+        else if (currentTab === 'courses') await loadAllCourses();
+        else if (currentTab === 'assignments') await loadAllAssignments();
+        else if (currentTab === 'absences') await loadAbsences(document.getElementById('absencesSpecialtySelect').value);
+        setTimeout(() => setupFilters(currentTab), 50);
+    }
+
     initialLoad();
 
 </script>

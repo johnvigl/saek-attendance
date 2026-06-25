@@ -7,6 +7,7 @@ from datetime import date, datetime, timedelta
 from typing import List, Optional
 import mysql.connector
 from mysql.connector import pooling, Error
+import json
 import os
 import csv
 import io
@@ -610,6 +611,15 @@ def init_db():
                 VALUES ('active_semester_id', @default_semester_id)
                 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
             """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS user_preferences (
+                user_id INT PRIMARY KEY,
+                preferences JSON NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
 
         conn.commit()
         cursor.close()
@@ -2231,6 +2241,80 @@ async def admin_change_password(admin_id: int, data: dict, current_user = Depend
     conn.close()
     
     return {"message": "Ο κωδικός άλλαξε επιτυχώς"}
+
+# -------------------- PREFERENCES --------------------
+@app.get("/admin/preferences")
+async def get_user_preferences(current_user = Depends(require_role("admin"))):
+    """
+    Επιστρέφει τις προτιμήσεις εμφάνισης του τρέχοντος admin χρήστη.
+    Αν δεν υπάρχουν, επιστρέφει default τιμές (όλα εμφανίζονται).
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT preferences FROM user_preferences WHERE user_id = %s", (current_user["user_id"],))
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if row:
+        return row["preferences"]
+    else:
+        # Default preferences – όλες οι στήλες εμφανίζονται, edit mode ενεργό
+        return {
+            "teachers": {
+                "email": True,
+                "phone": True,
+                "actions": True
+            },
+            "students": {
+                "amk": True,
+                "father_name": True,
+                "mother_name": True,
+                "email": True,
+                "phone": True,
+                "specialty": True,
+                "semester": True,
+                "department": True,
+                "team": True,
+                "actions": True
+            },
+            "courses": {
+                "semester": True,
+                "team": True,
+                "classroom": True,
+                "actions": True
+            },
+            "assignments": {
+                "actions": True
+            },
+            "absences": {
+                "amk": True,
+                "course_names": True
+            },
+            "edit_mode": True
+        }
+
+
+@app.put("/admin/preferences")
+async def update_user_preferences(data: dict, current_user = Depends(require_role("admin"))):
+    import json  # <-- ΠΡΟΣΘΗΚΗ ΕΔΩ
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            INSERT INTO user_preferences (user_id, preferences) 
+            VALUES (%s, %s) 
+            ON DUPLICATE KEY UPDATE preferences = VALUES(preferences)
+        """, (current_user["user_id"], json.dumps(data)))
+        conn.commit()
+        return {"message": "Preferences updated successfully"}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(500, f"Σφάλμα στην αποθήκευση των προτιμήσεων: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
 
 # -------------------- SEMESTER ENDPOINTS --------------------
 @app.get("/admin/semesters/active")
