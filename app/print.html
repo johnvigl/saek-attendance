@@ -11,7 +11,8 @@
 <div id="controls">
     <label for="departmentSelect">Τμήμα:</label>
     <select id="departmentSelect">
-        <option value="">-- Φόρτωση τμημάτων --</option>
+        <option value="">-- Επίλεξε τμήμα --</option>
+        <option value="all">📋 Όλα τα τμήματα</option>
     </select>
 
     <label for="reportType">Τύπος αναφοράς:</label>
@@ -27,6 +28,9 @@
 <div id="printContent"></div>
 
 <script>
+    // ----- Global μεταβλητές -----
+    let allDepartments = [];
+
     async function api(url, options={}) {
         const res = await fetch(url, {
             credentials: 'include',
@@ -43,6 +47,9 @@
             const data = await api('/admin/print/departments');
             const select = document.getElementById('departmentSelect');
             select.innerHTML = '<option value="">-- Επίλεξε τμήμα --</option>';
+            select.innerHTML += '<option value="all">📋 Όλα τα τμήματα</option>';
+            
+            allDepartments = [];
             data.departments.forEach(d => {
                 const opt = document.createElement('option');
                 opt.value = JSON.stringify({ 
@@ -53,52 +60,74 @@
                 });
                 opt.textContent = d.display;
                 select.appendChild(opt);
+                allDepartments.push(opt);
             });
-            if (select.value) loadPrintData();
+            
+            // Default: Όλα τα τμήματα
+            select.value = 'all';   // <-- ΑΥΤΟ ΑΛΛΑΖΕΙ
+            
+            loadPrintData();
         } catch(err) {
             alert('Σφάλμα φόρτωσης τμημάτων: ' + err.message);
         }
     }
 
-    // ---- Φόρτωση δεδομένων βάσει επιλογής ----
-    async function loadPrintData() {
-        const select = document.getElementById('departmentSelect');
-        const val = select.value;
-        if (!val) {
-            document.getElementById('printContent').innerHTML = '<p style="text-align:center;padding:40px;">Παρακαλώ επιλέξτε τμήμα.</p>';
-            return;
-        }
-        const params = JSON.parse(val);
-        const reportType = document.getElementById('reportType').value;
-        const container = document.getElementById('printContent');
-        container.innerHTML = '';
-
+    // ---- Φόρτωση δεδομένων για ένα συγκεκριμένο τμήμα ----
+    async function loadAndRenderForDepartment(params, reportType, container) {
         let unitName = 'ΣΑΕΚ';
         try {
             const settings = await api('/admin/settings');
             unitName = settings.unit_name || 'ΣΑΕΚ';
         } catch(e) {}
 
-        try {
-            let absData = null, sylData = null;
+        let absData = null, sylData = null;
 
-            if (reportType === 'absences' || reportType === 'both') {
-                absData = await api(`/admin/print/groups?specialty_name=${encodeURIComponent(params.specialty_name)}&semester=${encodeURIComponent(params.semester)}&department=${encodeURIComponent(params.department)}`);
-            }
-            if (reportType === 'syllabus' || reportType === 'both') {
-                sylData = await api(`/admin/print/syllabus?specialty_name=${encodeURIComponent(params.specialty_name)}&semester=${encodeURIComponent(params.semester)}&department=${encodeURIComponent(params.department)}`);
-            }
-
-            renderAll(unitName, params.semester_name, absData?.groups || [], sylData?.groups || [], reportType);
-        } catch(err) {
-            alert('Σφάλμα φόρτωσης δεδομένων: ' + err.message);
+        if (reportType === 'absences' || reportType === 'both') {
+            absData = await api(`/admin/print/groups?specialty_name=${encodeURIComponent(params.specialty_name)}&semester=${encodeURIComponent(params.semester)}&department=${encodeURIComponent(params.department)}`);
         }
+        if (reportType === 'syllabus' || reportType === 'both') {
+            sylData = await api(`/admin/print/syllabus?specialty_name=${encodeURIComponent(params.specialty_name)}&semester=${encodeURIComponent(params.semester)}&department=${encodeURIComponent(params.department)}`);
+        }
+
+        renderAll(unitName, params.semester_name, absData?.groups || [], sylData?.groups || [], reportType, container);
     }
 
-    // ---- Κύρια συνάρτηση εμφάνισης ----
-    function renderAll(unitName, semesterName, absGroups, sylGroups, reportType) {
+    // ---- Φόρτωση δεδομένων βάσει επιλογής ----
+    async function loadPrintData() {
+        const select = document.getElementById('departmentSelect');
+        const val = select.value;
         const container = document.getElementById('printContent');
         container.innerHTML = '';
+
+        if (!val) {
+            container.innerHTML = '<p style="text-align:center;padding:40px;">Παρακαλώ επιλέξτε τμήμα.</p>';
+            return;
+        }
+
+        const reportType = document.getElementById('reportType').value;
+
+        // Αν επιλέχθηκε "Όλα τα τμήματα"
+        if (val === 'all') {
+            for (let i = 0; i < allDepartments.length; i++) {
+                const opt = allDepartments[i];
+                const params = JSON.parse(opt.value);
+                try {
+                    await loadAndRenderForDepartment(params, reportType, container);
+                } catch(err) {
+                    console.error('Σφάλμα φόρτωσης για το τμήμα:', params, err);
+                }
+            }
+            return;
+        }
+
+        // Αλλιώς φόρτωσε το επιλεγμένο τμήμα
+        const params = JSON.parse(val);
+        await loadAndRenderForDepartment(params, reportType, container);
+    }
+
+    // ---- Κύρια συνάρτηση εμφάνισης (με προαιρετικό container) ----
+    function renderAll(unitName, semesterName, absGroups, sylGroups, reportType, container) {
+        if (!container) container = document.getElementById('printContent');
 
         if (reportType === 'absences' || reportType === 'both') {
             if (absGroups && absGroups.length > 0) {
@@ -107,13 +136,16 @@
                     container.appendChild(page);
                 });
             } else if (reportType === 'absences') {
-                container.innerHTML = '<p style="text-align:center;padding:40px;">Δεν βρέθηκαν δεδομένα απουσιολογίου για αυτό το τμήμα.</p>';
+                const msg = document.createElement('p');
+                msg.style.textAlign = 'center';
+                msg.style.padding = '40px';
+                msg.textContent = 'Δεν βρέθηκαν δεδομένα απουσιολογίου για αυτό το τμήμα.';
+                container.appendChild(msg);
             }
         }
 
         if (reportType === 'syllabus' || reportType === 'both') {
             if (sylGroups && sylGroups.length > 0) {
-                // Τίτλος διαχωρισμού (μόνο αν υπάρχουν και τα δύο)
                 if (reportType === 'both' && absGroups && absGroups.length > 0) {
                     const titleDiv = document.createElement('div');
                     titleDiv.className = 'syllabus-title';
@@ -125,12 +157,20 @@
                     container.appendChild(page);
                 });
             } else if (reportType === 'syllabus') {
-                container.innerHTML = '<p style="text-align:center;padding:40px;">Δεν βρέθηκαν δεδομένα βιβλίου ύλης για αυτό το τμήμα.</p>';
+                const msg = document.createElement('p');
+                msg.style.textAlign = 'center';
+                msg.style.padding = '40px';
+                msg.textContent = 'Δεν βρέθηκαν δεδομένα βιβλίου ύλης για αυτό το τμήμα.';
+                container.appendChild(msg);
             }
         }
 
         if (reportType === 'both' && (!absGroups || absGroups.length === 0) && (!sylGroups || sylGroups.length === 0)) {
-            container.innerHTML = '<p style="text-align:center;padding:40px;">Δεν βρέθηκαν δεδομένα για αυτό το τμήμα.</p>';
+            const msg = document.createElement('p');
+            msg.style.textAlign = 'center';
+            msg.style.padding = '40px';
+            msg.textContent = 'Δεν βρέθηκαν δεδομένα για αυτό το τμήμα.';
+            container.appendChild(msg);
         }
     }
 
@@ -181,7 +221,7 @@
         });
 
         const thTotal = document.createElement('th');
-        thTotal.textContent = 'ΣΥΝΟΛΟ';
+        thTotal.textContent = 'Σύνολο';
         thTotal.className = 'total-col';
         headerRow.appendChild(thTotal);
 

@@ -819,7 +819,7 @@
             if (!matchesFilter(c.team, filters.team)) return false;
             if (!matchesFilter(c.type_indicator, filters.type)) return false;
             if (!matchesFilter(c.classroom, filters.classroom)) return false;
-            if (!matchesFilter(c.weekly_hours, filters.weekly_hours)) return false;
+            if (!matchesFilter(String(c.weekly_hours), filters.weekly_hours)) return false;
             return true;
         });
         if (sortState.courses.order) sortData(coursesFiltered, sortState.courses.col, sortState.courses.order);
