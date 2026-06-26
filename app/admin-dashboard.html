@@ -1460,10 +1460,35 @@
                 teacherSelect.appendChild(opt);
             });
             courseSelect.innerHTML = '<option value="">-- Μάθημα --</option>';
-            (courses.course_units || []).forEach(c => {
+            const sortedCourses = [...(courses.course_units || [])].sort((a, b) => {
+                if (a.specialty_name !== b.specialty_name) {
+                    return a.specialty_name.localeCompare(b.specialty_name);
+                }
+                if (a.department !== b.department) {
+                    return a.department.localeCompare(b.department);
+                }
+                if (a.lesson_name !== b.lesson_name) {
+                    return a.lesson_name.localeCompare(b.lesson_name);
+                }
+                if ((a.type_indicator || '') !== (b.type_indicator || '')) {
+                    return (a.type_indicator || '').localeCompare(b.type_indicator || '');
+                }
+                return (a.team || '').localeCompare(b.team || '');
+            });
+
+            sortedCourses.forEach(c => {
                 const opt = document.createElement('option');
                 opt.value = c.id;
-                opt.textContent = `${c.lesson_name} (${c.specialty_name})`;
+                // Δημιουργία αναγνωρίσιμης ετικέτας
+                let label = `${c.specialty_name} ${c.department} - ${c.lesson_name}`;
+                if (c.type_indicator) {
+                    label += ` (${c.type_indicator})`;
+                }
+                if (c.team) {
+                    label += ` - Ομάδα ${c.team}`;
+                }
+                label += ` - ${c.weekly_hours || 1} ώρες`;
+                opt.textContent = label;
                 courseSelect.appendChild(opt);
             });
             document.getElementById('addAssignmentModal').style.display = 'flex';
