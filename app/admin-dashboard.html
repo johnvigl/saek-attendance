@@ -1108,24 +1108,34 @@
         }
     }
 
-    // Handlers για event delegation
+    // Handlers για event delegation (με έλεγχο να μην παρεμβαίνουν στην επεξεργασία)
     function filterTeachersHandler(e) {
         if (e.target.tagName === 'INPUT') {
+            // Αγνόησε input που βρίσκονται μέσα σε πεδία επεξεργασίας
+            if (e.target.closest('.editable-field') || e.target.closest('.editable-input')) return;
+            // Αγνόησε αν υπάρχει ενεργή επεξεργασία
+            if (editingId !== null) return;
             filterTeachers();
         }
     }
     function filterStudentsHandler(e) {
         if (e.target.tagName === 'INPUT') {
+            if (e.target.closest('.editable-field') || e.target.closest('.editable-input')) return;
+            if (editingId !== null) return;
             filterStudents();
         }
     }
     function filterCoursesHandler(e) {
         if (e.target.tagName === 'INPUT') {
+            if (e.target.closest('.editable-field') || e.target.closest('.editable-input')) return;
+            if (editingId !== null) return;
             filterCourses();
         }
     }
     function filterAssignmentsHandler(e) {
         if (e.target.tagName === 'INPUT') {
+            if (e.target.closest('.editable-field') || e.target.closest('.editable-input')) return;
+            if (editingId !== null) return;
             filterAssignments();
         }
     }
@@ -1282,6 +1292,8 @@
                 }
             }
 
+            editingId = null;
+
             if (entityType !== 'assignments' && entityType !== 'course-units') {
                 if (currentTab === 'teachers') loadAllTeachers();
                 else if (currentTab === 'students') loadAllStudents();
@@ -1308,6 +1320,7 @@
                 saveBtn.style.display = 'none';
                 cancelBtn.style.display = 'none';
             }
+            editingId = null;
         };
     }
 
