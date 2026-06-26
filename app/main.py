@@ -25,7 +25,7 @@ import httpx
 from cryptography.fernet import Fernet
 
 GITHUB_REPO = "johnvigl/saek-attendance"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.1.0"
 
 ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
 if not ENCRYPTION_KEY:
